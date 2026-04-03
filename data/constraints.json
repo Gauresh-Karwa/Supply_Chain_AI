@@ -1,0 +1,130 @@
+[
+  {
+    "region_id": "hormuz_strait",
+    "region_name": "Strait of Hormuz",
+    "status": "restricted",
+    "type": "geopolitical",
+    "notes": "Iran-Israel tensions. Iran has threatened closure. 20% of global oil passes here.",
+    "updated_at": "2025-01-01T00:00:00"
+  },
+  {
+    "region_id": "bab_el_mandeb",
+    "region_name": "Bab-el-Mandeb Strait",
+    "status": "restricted",
+    "type": "geopolitical",
+    "notes": "Houthi missile and drone attacks on commercial vessels. Yemen conflict ongoing.",
+    "updated_at": "2025-01-01T00:00:00"
+  },
+  {
+    "region_id": "taiwan_strait",
+    "region_name": "Taiwan Strait",
+    "status": "restricted",
+    "type": "geopolitical",
+    "notes": "China-Taiwan military tensions. PLA naval exercises periodically close corridor.",
+    "updated_at": "2025-01-01T00:00:00"
+  },
+  {
+    "region_id": "south_china_sea",
+    "region_name": "South China Sea",
+    "status": "restricted",
+    "type": "geopolitical",
+    "notes": "Territorial disputes between China, Philippines, Vietnam. Piracy risk in some zones.",
+    "updated_at": "2025-01-01T00:00:00"
+  },
+  {
+    "region_id": "suez_canal",
+    "region_name": "Suez Canal",
+    "status": "open",
+    "type": "geopolitical",
+    "notes": "Currently open. History: Ever Given blockage 2021 (6 days). Houthi threat reduced Egyptian transit revenue.",
+    "updated_at": "2025-01-01T00:00:00"
+  },
+  {
+    "region_id": "malacca_strait",
+    "region_name": "Strait of Malacca",
+    "status": "open",
+    "type": "geopolitical",
+    "notes": "40% of world trade. Piracy risk managed by trilateral patrols (Malaysia, Indonesia, Singapore).",
+    "updated_at": "2025-01-01T00:00:00"
+  },
+  {
+    "region_id": "strait_of_gibraltar",
+    "region_name": "Strait of Gibraltar",
+    "status": "open",
+    "type": "geopolitical",
+    "notes": "Mediterranean-Atlantic gateway. Spain-Morocco territorial dispute inactive.",
+    "updated_at": "2025-01-01T00:00:00"
+  },
+  {
+    "region_id": "indian_ocean",
+    "region_name": "Indian Ocean",
+    "status": "open",
+    "type": "environmental",
+    "notes": "Monsoon season (June-September) increases wave heights. Cyclone risk in Bay of Bengal.",
+    "updated_at": "2025-01-01T00:00:00"
+  },
+  {
+    "region_id": "arabian_sea",
+    "region_name": "Arabian Sea",
+    "status": "open",
+    "type": "environmental",
+    "notes": "Piracy risk reduced from peak Somali piracy era. Monsoon weather June-August.",
+    "updated_at": "2025-01-01T00:00:00"
+  },
+  {
+    "region_id": "mediterranean_sea",
+    "region_name": "Mediterranean Sea",
+    "status": "open",
+    "type": "environmental",
+    "notes": "Generally stable. Winter storms November-March increase delay risk.",
+    "updated_at": "2025-01-01T00:00:00"
+  },
+  {
+    "region_id": "atlantic_ocean",
+    "region_name": "Atlantic Ocean",
+    "status": "open",
+    "type": "environmental",
+    "notes": "North Atlantic winter storms (Nov-Feb) affect Hamburg and Rotterdam ETA.",
+    "updated_at": "2025-01-01T00:00:00"
+  },
+  {
+    "region_id": "cape_of_good_hope",
+    "region_name": "Cape of Good Hope",
+    "status": "open",
+    "type": "environmental",
+    "notes": "Roaring Forties weather system. Rough seas year-round. Safe but slow alternative to Suez.",
+    "updated_at": "2025-01-01T00:00:00"
+  },
+  {
+    "region_id": "north_sea",
+    "region_name": "North Sea",
+    "status": "open",
+    "type": "environmental",
+    "notes": "Fog and winter storms affect Hamburg and Rotterdam port operations.",
+    "updated_at": "2025-01-01T00:00:00"
+  },
+  {
+    "region_id": "east_china_sea",
+    "region_name": "East China Sea",
+    "status": "open",
+    "type": "geopolitical",
+    "notes": "Japan-China Senkaku Islands dispute. Typhoon season July-October.",
+    "updated_at": "2025-01-01T00:00:00"
+  },
+  {
+    "region_id": "bay_of_bengal",
+    "region_name": "Bay of Bengal",
+    "status": "open",
+    "type": "environmental",
+    "notes": "Cyclone corridor. Significant weather risk October-November and April-May.",
+    "updated_at": "2025-01-01T00:00:00"
+  },
+  {
+    "region_id": "pacific_ocean",
+    "region_name": "Pacific Ocean",
+    "status": "open",
+    "type": "environmental",
+    "notes": "Vast open ocean. Typhoon belt in western Pacific July-October.",
+    "updated_at": "2025-01-01T00:00:00"
+  }
+]
