@@ -2,7 +2,7 @@
   {
     "region_id": "hormuz_strait",
     "region_name": "Strait of Hormuz",
-    "status": "restricted",
+    "status": "blocked",
     "type": "geopolitical",
     "notes": "Iran-Israel tensions. Iran has threatened closure. 20% of global oil passes here.",
     "updated_at": "2025-01-01T00:00:00"
@@ -10,7 +10,7 @@
   {
     "region_id": "bab_el_mandeb",
     "region_name": "Bab-el-Mandeb Strait",
-    "status": "restricted",
+    "status": "blocked",
     "type": "geopolitical",
     "notes": "Houthi missile and drone attacks on commercial vessels. Yemen conflict ongoing.",
     "updated_at": "2025-01-01T00:00:00"

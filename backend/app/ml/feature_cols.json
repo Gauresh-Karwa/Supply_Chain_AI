@@ -1,0 +1,23 @@
+[
+  "distance_km",
+  "base_time_hrs",
+  "reliability_score",
+  "weather_severity_origin",
+  "weather_severity_route",
+  "n_restricted_regions",
+  "n_blocked_regions",
+  "constraint_penalty",
+  "passes_suez",
+  "passes_hormuz",
+  "passes_malacca",
+  "passes_bab_el_mandeb",
+  "passes_cape",
+  "passes_taiwan_strait",
+  "passes_south_china_sea",
+  "departure_month",
+  "is_peak_season",
+  "is_monsoon_season",
+  "zone_id",
+  "zone_risk_score",
+  "anomaly_flag"
+]

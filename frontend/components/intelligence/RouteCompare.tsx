@@ -1,0 +1,238 @@
+'use client'
+import { useState, useEffect } from 'react'
+import { fetchRoutes, fetchRoutesForPair, whatIfSimulation, stripMarkdown } from '@/lib/api'
+import { Route } from '@/types'
+
+function routeDisplayName(route: Route): string {
+  const keyMap: Record<string, string> = {
+    'Suez_Canal':        'Route via Suez Canal',
+    'Cape_of_Good_Hope': 'Route via Cape of Good Hope',
+    'Hormuz_Strait':     'Route via Strait of Hormuz',
+    'Malacca_Strait':    'Route via Strait of Malacca',
+  }
+  const key = route.waypoints?.find(w => keyMap[w])
+  return key
+    ? keyMap[key]
+    : `Route via ${route.waypoints?.[0]?.replace(/_/g, ' ') ?? '—'}`
+}
+
+export default function RouteCompare() {
+  const [origin,  setOrigin]  = useState('')
+  const [dest,    setDest]    = useState('')
+  const [date,    setDate]    = useState('')
+  const [routes,  setRoutes]  = useState<Route[]>([])
+  const [routeA,  setRouteA]  = useState('')
+  const [routeB,  setRouteB]  = useState('')
+  const [loading, setLoading] = useState(false)
+  const [result,  setResult]  = useState<any>(null)
+  const [error,   setError]   = useState('')
+
+  const [allRoutes, setAllRoutes] = useState<Route[]>([])
+
+  useEffect(() => {
+    fetchRoutes().then(d => setAllRoutes(d.routes || []))
+  }, [])
+
+  const origins = [...new Set(allRoutes.map(r => r.origin))].sort()
+  const destinations = origin
+    ? [...new Set(allRoutes.filter(r => r.origin === origin).map(r => r.destination))].sort()
+    : []
+
+  useEffect(() => {
+    if (origin && dest && origin !== dest) {
+      fetchRoutesForPair(origin, dest)
+        .then(d => { setRoutes(d.routes || []); setRouteA(''); setRouteB('') })
+        .catch(() => setRoutes([]))
+    }
+  }, [origin, dest])
+
+  async function handleCompare() {
+    if (!origin || !dest || !date || !routeA || !routeB) {
+      setError('Please fill in all fields.')
+      return
+    }
+    if (routeA === routeB) {
+      setError('Please select two different routes.')
+      return
+    }
+    setError(''); setLoading(true); setResult(null)
+    try {
+      setResult(await whatIfSimulation(origin, dest, date, routeA, routeB))
+    } catch {
+      setError('Comparison failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const routeAData = routes.find(r => r.id === routeA)
+  const routeBData = routes.find(r => r.id === routeB)
+
+  return (
+    <div className="p-6 max-w-3xl mx-auto">
+
+      <div className="bg-white border border-slate-200 rounded-xl p-5 mb-5">
+        <h2 className="text-sm font-semibold text-slate-800 mb-4">Select routes to compare</h2>
+
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <div>
+            <label className="text-xs text-slate-500 block mb-1">Origin port</label>
+            <select
+              value={origin}
+              onChange={e => { setOrigin(e.target.value); setResult(null) }}
+              className="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700"
+            >
+              <option value="">Select origin</option>
+              {origins.map(p => <option key={p} value={p}>{p.replace(/_/g, ' ')}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-slate-500 block mb-1">Destination port</label>
+            <select
+              value={dest}
+              onChange={e => { setDest(e.target.value); setResult(null) }}
+              disabled={!origin}
+              className="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700"
+            >
+              <option value="">Select destination</option>
+              {destinations.map(p => <option key={p} value={p}>{p.replace(/_/g, ' ')}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-slate-500 block mb-1">Departure date</label>
+            <input
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              className="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700"
+            />
+          </div>
+        </div>
+
+        {routes.length > 0 && (
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div>
+              <label className="text-xs text-slate-500 block mb-1">Current route</label>
+              <select
+                value={routeA}
+                onChange={e => setRouteA(e.target.value)}
+                className="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700"
+              >
+                <option value="">Select route</option>
+                {routes.map(r => (
+                  <option key={r.id} value={r.id}>{routeDisplayName(r)}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-slate-500 block mb-1">Alternate route</label>
+              <select
+                value={routeB}
+                onChange={e => setRouteB(e.target.value)}
+                className="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700"
+              >
+                <option value="">Select route</option>
+                {routes.filter(r => r.id !== routeA).map(r => (
+                  <option key={r.id} value={r.id}>{routeDisplayName(r)}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {routes.length === 0 && origin && dest && origin !== dest && (
+          <p className="text-xs text-slate-400 mb-3">
+            No routes found for this origin-destination pair.
+          </p>
+        )}
+
+        {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
+        <button
+          onClick={handleCompare}
+          disabled={loading}
+          className="bg-blue-600 text-white text-xs font-semibold px-5 py-2.5 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+        >
+          {loading ? 'Comparing routes...' : 'Compare routes →'}
+        </button>
+      </div>
+
+      {result && (
+        <div className="space-y-4">
+
+          {/* Side by side */}
+          <div className="grid grid-cols-2 gap-4">
+            {([
+              { label: 'Current route',   data: result.current_route,   info: routeAData },
+              { label: 'Alternate route', data: result.alternate_route, info: routeBData },
+            ] as const).map(({ label, data, info }, i) => {
+              const isRecommended = i === 1 && result.delta.recommendation === 'switch'
+              return (
+                <div
+                  key={i}
+                  className={`bg-white border rounded-xl p-4 ${
+                    isRecommended ? 'border-green-300 bg-green-50' : 'border-slate-200'
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="text-xs font-medium text-slate-500">{label}</div>
+                    {isRecommended && (
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full border border-green-200 font-medium">
+                        Recommended
+                      </span>
+                    )}
+                  </div>
+                  {info && (
+                    <div className="text-xs font-semibold text-slate-800 mb-2">
+                      {routeDisplayName(info)}
+                    </div>
+                  )}
+                  <div className={`text-3xl font-bold mb-1 ${
+                    data.risk_score >= 0.70 ? 'text-red-600'
+                    : data.risk_score >= 0.45 ? 'text-amber-600'
+                    : 'text-green-600'
+                  }`}>
+                    {Math.round(data.risk_score * 100)}%
+                  </div>
+                  <div className="text-xs text-slate-400">disruption risk</div>
+                  {data.delay_days > 0 && (
+                    <div className="text-xs text-slate-500 mt-1.5">
+                      {data.delay_days.toFixed(1)} days estimated delay
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Delta */}
+          <div className={`rounded-xl p-4 border ${
+            result.delta.risk_change < 0
+              ? 'bg-green-50 border-green-200 text-green-800'
+              : 'bg-red-50 border-red-200 text-red-800'
+          }`}>
+            <div className="text-xs font-semibold mb-1">
+              {result.delta.risk_change < 0
+                ? '✓ Switching to the alternate route reduces risk'
+                : '✗ Switching to the alternate route increases risk'}
+            </div>
+            <div className="text-xs opacity-80">
+              Risk {result.delta.risk_change < 0 ? 'reduces' : 'increases'} by{' '}
+              {Math.abs(Math.round(result.delta.risk_change * 100))}% ·{' '}
+              Delay {result.delta.delay_change_days < 0 ? 'reduces' : 'increases'} by{' '}
+              {Math.abs(result.delta.delay_change_days).toFixed(1)} days
+            </div>
+          </div>
+
+          {/* Gemini analysis */}
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+            <div className="text-xs font-semibold text-blue-700 mb-2">Expert analysis</div>
+            <p className="text-xs text-slate-700 leading-relaxed">
+              {stripMarkdown(result.gemini_comparison)}
+            </p>
+          </div>
+
+        </div>
+      )}
+    </div>
+  )
+}
