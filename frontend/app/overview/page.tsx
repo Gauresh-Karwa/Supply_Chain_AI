@@ -20,7 +20,7 @@ export default function OverviewPage() {
   const highRisk = shipments.filter(s => s.risk_score >= 0.70).length
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col gap-3 overflow-hidden">
       <TopBar
         title="Overview"
         subtitle={`Global maritime operations · ${new Date().toLocaleDateString('en-GB', {
@@ -39,9 +39,12 @@ export default function OverviewPage() {
       ) : (
         <>
           <MetricsStrip shipments={shipments} />
-          <div style={{ flex: 1, minHeight: 420, overflow: 'hidden' }}>
+          
+          {/* Removed the hardcoded minHeight here to fix the gap */}
+          <div className="w-full overflow-hidden">
             <WorldMap shipments={shipments} />
           </div>
+          
           <AlertFeed initialShipments={shipments} />
         </>
       )}
