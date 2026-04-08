@@ -213,3 +213,5 @@ __pycache__/
 *.joblib
 .env
 .vscode/
+__pycache__/
+*.pyc
