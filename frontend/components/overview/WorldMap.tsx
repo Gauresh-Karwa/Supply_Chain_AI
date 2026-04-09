@@ -17,6 +17,34 @@ const PORT_DATA: Record<string, { lon: number; lat: number; label: string }> = {
   'Karachi':    { lon:  67.0, lat: 24.9,  label: 'Karachi'     },
   'Djibouti':   { lon:  43.1, lat: 11.6,  label: 'Djibouti'    },
   'Port_Klang': { lon: 101.4, lat:  3.0,  label: 'Port Klang'  },
+  'Los_Angeles':{ lon:-118.2, lat: 34.1,  label: 'Los Angeles' },
+  'New_York':   { lon: -74.0, lat: 40.7,  label: 'New York'    },
+  'Santos':     { lon: -46.3, lat:-24.0,  label: 'Santos'      },
+  'Sydney':     { lon: 151.2, lat:-33.9,  label: 'Sydney'      },
+  'Melbourne':  { lon: 145.0, lat:-37.8,  label: 'Melbourne'   },
+  'Tokyo':      { lon: 139.7, lat: 35.7,  label: 'Tokyo'       },
+  'Yokohama':   { lon: 139.6, lat: 35.4,  label: 'Yokohama'    },
+  'Shenzhen':   { lon: 114.1, lat: 22.5,  label: 'Shenzhen'    },
+  'Ningbo':     { lon: 121.5, lat: 29.9,  label: 'Ningbo'      },
+  'Qingdao':    { lon: 120.3, lat: 36.1,  label: 'Qingdao'     },
+  'Kaohsiung':  { lon: 120.3, lat: 22.6,  label: 'Kaohsiung'   },
+  'Houston':    { lon: -95.4, lat: 29.8,  label: 'Houston'     },
+  'Savannah':   { lon: -81.1, lat: 32.1,  label: 'Savannah'    },
+  'Miami':      { lon: -80.2, lat: 25.8,  label: 'Miami'       },
+  'Seattle':    { lon:-122.3, lat: 47.6,  label: 'Seattle'     },
+  'Vancouver':  { lon:-123.1, lat: 49.3,  label: 'Vancouver'   },
+  'Valparaiso': { lon: -71.6, lat:-33.0,  label: 'Valparaiso'  },
+  'Callao':     { lon: -77.1, lat:-12.1,  label: 'Callao'      },
+  'Buenos_Aires':{lon: -58.4, lat:-34.6,  label: 'Buenos Aires'},
+  'Felixstowe': { lon:   1.3, lat: 51.9,  label: 'Felixstowe'  },
+  'Algeciras':  { lon:  -5.4, lat: 36.1,  label: 'Algeciras'   },
+  'Valencia':   { lon:  -0.4, lat: 39.5,  label: 'Valencia'    },
+  'Genoa':      { lon:   8.9, lat: 44.4,  label: 'Genoa'       },
+  'Alexandria': { lon:  29.9, lat: 31.2,  label: 'Alexandria'  },
+  'Cape_Town':  { lon:  18.4, lat:-33.9,  label: 'Cape Town'   },
+  'Vladivostok':{ lon: 131.8, lat: 43.1,  label: 'Vladivostok' },
+  'St_Petersburg':{lon: 30.3, lat: 59.9,  label: 'St. Petersburg'},
+  'Auckland':   { lon: 174.7, lat:-36.8,  label: 'Auckland'    },
 }
 
 // True Web Mercator Projection (Industry Standard - Same as Google Maps)
@@ -29,7 +57,7 @@ function toMercator(lon: number, lat: number) {
 }
 
 // Bounding box targeting the primary global trade hemisphere
-const MAP_BOUNDS = { lonMin: -20, lonMax: 150, latMin: -35, latMax: 65 }
+const MAP_BOUNDS = { lonMin: -130, lonMax: 160, latMin: -45, latMax: 65 }
 const [mxMin, myMin] = toMercator(MAP_BOUNDS.lonMin, MAP_BOUNDS.latMax) // Top-Left
 const [mxMax, myMax] = toMercator(MAP_BOUNDS.lonMax, MAP_BOUNDS.latMin) // Bottom-Right
 
@@ -48,6 +76,7 @@ export default function WorldMap({ shipments }: Props) {
   const routeIdxRef = useRef<Record<string, number>>({})
   const timeRef    = useRef(0)
   const reqRef     = useRef<number>()
+  const mousePos   = useRef({ x: -1000, y: -1000 })
 
   shipRef.current = shipments
 
@@ -175,20 +204,20 @@ export default function WorldMap({ shipments }: Props) {
       // Tightened spacing to reduce messiness
       const routeIdx = routeIdxRef.current[s.id] ?? 0
       const totalForPair = shipRef.current.filter(x => x.origin === s.origin && x.destination === s.destination).length
-      const offsetAmt = totalForPair > 1 ? (routeIdx - (totalForPair - 1) / 2) * (5 * zoom.current) : 0
+      // Offset applies only to curve control point to bundle the departure/arrivals
+      const offsetAmt = totalForPair > 1 ? (routeIdx - (totalForPair - 1) / 2) * (12 * zoom.current) : 0
 
-      const sox = ox + perpX * offsetAmt
-      const soy = oy + perpY * offsetAmt
-      const sdx = dx + perpX * offsetAmt
-      const sdy = dy + perpY * offsetAmt
+      const sox = ox
+      const soy = oy
+      const sdx = dx
+      const sdy = dy
 
-      const midX = (sox + sdx) / 2
-      const midY = (soy + sdy) / 2
+      const midX = (ox + dx) / 2
+      const midY = (oy + dy) / 2
       
-      // Significantly reduced curvature for a tighter, cleaner look
-      const curvature = len * 0.10
-      const cx = midX + perpX * curvature
-      const cy = midY + perpY * curvature
+      const curvature = len * 0.15
+      const cx = midX + perpX * (curvature + offsetAmt)
+      const cy = midY + perpY * (curvature + offsetAmt)
 
       let color = '#10b981'
       if (s.risk_score >= 0.70) color = '#ef4444'
@@ -228,14 +257,18 @@ export default function WorldMap({ shipments }: Props) {
     })
 
     // --- 5. Precise Port Markers ---
-    Object.entries(PORT_DATA).forEach(([key, port]) => {
-      const [x, y] = getPos(port.lon, port.lat)
-      const isActive = activePorts.has(key)
-      if (!isActive) return
+    const renderPorts = Object.entries(PORT_DATA)
+      .map(([key, port]) => {
+        const [x, y] = getPos(port.lon, port.lat)
+        const hasHigh = shipRef.current.some(s => (s.origin === key || s.destination === key) && s.risk_score >= 0.70)
+        const isHovered = Math.hypot(x - mousePos.current.x, y - mousePos.current.y) < 15
+        return { key, port, x, y, hasHigh, isHovered }
+      })
+      .filter(p => activePorts.has(p.key))
 
-      const hasHigh = shipRef.current.some(s => (s.origin === key || s.destination === key) && s.risk_score >= 0.70)
+    // Draw all dots first (so they sit underneath labels)
+    renderPorts.forEach(({ x, y, hasHigh }) => {
       const fill = hasHigh ? '#ef4444' : '#0f172a'
-
       if (hasHigh) {
         const pulse = (Math.sin(timeRef.current * 0.05) + 1) / 2
         ctx.beginPath()
@@ -243,7 +276,6 @@ export default function WorldMap({ shipments }: Props) {
         ctx.fillStyle = `rgba(239, 68, 68, ${0.2 * (1-pulse)})`
         ctx.fill()
       }
-
       ctx.beginPath()
       ctx.arc(x, y, 4 * zoom.current, 0, Math.PI*2)
       ctx.fillStyle = '#ffffff'
@@ -251,10 +283,42 @@ export default function WorldMap({ shipments }: Props) {
       ctx.lineWidth = 2
       ctx.strokeStyle = fill
       ctx.stroke()
+    })
 
-      ctx.font = `600 ${Math.max(10, Math.min(12, 11 * zoom.current))}px "Inter", -apple-system, sans-serif`
-      ctx.fillStyle = '#0f172a'
-      ctx.fillText(port.label, x + 6, y + 4)
+    // Draw Labels with Collision Detection
+    ctx.font = `600 ${Math.max(10, Math.min(12, 11 * zoom.current))}px "Inter", -apple-system, sans-serif`
+    ctx.fillStyle = '#0f172a'
+    const drawnLabels: { l: number, r: number, t: number, b: number }[] = []
+
+    // Sort to prioritize important labels claiming screen space first
+    const sortedLabels = [...renderPorts].sort((a, b) => {
+      if (a.isHovered && !b.isHovered) return -1
+      if (!a.isHovered && b.isHovered) return 1
+      if (a.hasHigh && !b.hasHigh) return -1
+      if (!a.hasHigh && b.hasHigh) return 1
+      return 0
+    })
+
+    sortedLabels.forEach(({ port, x, y, hasHigh, isHovered }) => {
+      if (!isHovered && !hasHigh && zoom.current < 2.5) return
+      
+      const width = ctx.measureText(port.label).width
+      const box = { l: x + 4, r: x + 8 + width, t: y - 10, b: y + 6 }
+      
+      const collision = drawnLabels.some(b => 
+        !(box.r < b.l || box.l > b.r || box.b < b.t || box.t > b.b)
+      )
+      
+      // Hovered labels bypass collision to guarantee visibility
+      if (!collision || isHovered) {
+        // Draw crisp text background to mask crossing lines
+        ctx.fillStyle = 'rgba(248, 250, 252, 0.8)'
+        ctx.fillRect(box.l, box.t, box.r - box.l, box.b - box.t)
+        
+        ctx.fillStyle = '#0f172a'
+        ctx.fillText(port.label, x + 6, y + 4)
+        drawnLabels.push(box)
+      }
     })
   }, [geoData])
 
@@ -270,13 +334,16 @@ export default function WorldMap({ shipments }: Props) {
 
   // Mouse controls
   const onMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const rect = canvasRef.current!.getBoundingClientRect()
+    const mx = e.clientX - rect.left
+    const my = e.clientY - rect.top
+    mousePos.current = { x: mx, y: my }
+    
     if (dragging.current) {
-      const rect = canvasRef.current!.getBoundingClientRect()
-      const mx = e.clientX - rect.left, my = e.clientY - rect.top
       pan.current.x += (mx - lastMouse.current.x) / zoom.current
       pan.current.y += (my - lastMouse.current.y) / zoom.current
-      lastMouse.current = { x: mx, y: my }
     }
+    lastMouse.current = { x: mx, y: my }
   }, [])
 
   const onMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -308,7 +375,7 @@ export default function WorldMap({ shipments }: Props) {
         onMouseMove={onMouseMove}
         onMouseDown={onMouseDown}
         onMouseUp={onMouseUp}
-        onMouseLeave={() => { dragging.current = false }}
+        onMouseLeave={() => { dragging.current = false; mousePos.current = { x: -1000, y: -1000 } }}
       />
       <div className="absolute top-4 right-4 flex flex-col gap-2 z-20">
         {[
