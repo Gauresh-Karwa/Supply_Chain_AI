@@ -84,6 +84,11 @@ async def predict_shipment(req: PredictRequest):
             "delay_days": best_route["prediction"]["delay_days"],
             "status":     best_route["prediction"]["status"],
             "top_shap":   best_route["prediction"]["top_shap"],
+            "weather": {
+                "origin_score": best_route["prediction"]["feature_values"]["weather_severity_origin"],
+                "route_score":  best_route["prediction"]["feature_values"]["weather_severity_route"],
+                "is_forecast":  datetime.strptime(req.departure_date, "%Y-%m-%d").date() >= datetime.now().date()
+            }
         },
         "explanation": explanation,
         "alternatives": [
