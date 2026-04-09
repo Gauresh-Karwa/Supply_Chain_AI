@@ -11,24 +11,58 @@ def get_weather_severity(port: str, date: datetime) -> float:
     if not coords:
         return 1.0
 
-    date_str = date.strftime("%Y-%m-%d")
+    now = datetime.now().date()
+    target_date = date.date()
+    delta_days = (target_date - now).days
+    
+    # 1. NEAR FUTURE: Use Forecast API (Live meteorology)
+    if 0 <= delta_days <= 14:
+        api_base = "https://api.open-meteo.com/v1/forecast"
+        fetch_date = target_date
+    # 2. PAST: Use Archive API (Real measured data)
+    elif delta_days < 0:
+        api_base = "https://archive-api.open-meteo.com/v1/archive"
+        fetch_date = target_date
+    # 3. FAR FUTURE: Use Archive API with a 1-year offset (Historical Proxy)
+    # This provides 'Climatological Intelligence' for long-term route planning.
+    else:
+        api_base = "https://archive-api.open-meteo.com/v1/archive"
+        fetch_date = target_date.replace(year=target_date.year - 1)
+    
+    date_str = fetch_date.strftime("%Y-%m-%d")
     url = (
-        f"https://archive-api.open-meteo.com/v1/archive"
+        f"{api_base}"
         f"?latitude={coords['lat']}&longitude={coords['lon']}"
         f"&start_date={date_str}&end_date={date_str}"
         f"&daily=precipitation_sum,windspeed_10m_max"
         f"&timezone=UTC"
     )
+    
     try:
         resp = requests.get(url, timeout=10)
         data = resp.json()
-        precip = (data["daily"]["precipitation_sum"] or [0])[0] or 0
-        wind   = (data["daily"]["windspeed_10m_max"]  or [0])[0] or 0
-        precip_score = min(precip / 16, 5)
-        wind_score   = min(wind   / 20, 5)
-        return round(precip_score * 0.6 + wind_score * 0.4, 3)
-    except Exception:
-        return 1.0
+        
+        daily = data.get("daily", {})
+        precips = daily.get("precipitation_sum", [0]) or [0]
+        winds   = daily.get("windspeed_10m_max",  [0]) or [0]
+        
+        precip = precips[0] if precips and precips[0] is not None else 0
+        wind   = winds[0]   if winds and winds[0] is not None else 0
+        
+        # Balanced Calibration: 
+        # Wind: 40km/h (Force 6) starts 'Severe'. 15km/h starts 'Moderate'.
+        # Rain: 20mm (Heavy) starts 'Severe'. 6mm starts 'Moderate'.
+        precip_score = min(precip / 20, 5)
+        wind_score   = min(wind / 40, 5)
+        
+        # Power curve to ensure 'Clear' is the default for low values
+        severity = round(max(precip_score, wind_score), 3)
+        
+        print(f"[weather] {port} on {date_str}: precip={precip} wind={wind} -> score={severity}")
+        return severity
+    except Exception as e:
+        print(f"Weather API Error for {port} on {date_str}: {e}")
+        return 0.5 # Default to slightly elevated if unknown
 
 
 def get_zone_features(port: str) -> dict:
@@ -42,10 +76,14 @@ def get_zone_features(port: str) -> dict:
             "zone_risk_score": float(row["zone_risk_score"].values[0]),
         }
 
-    # Port not in lookup — predict zone using K-Means (Option B)
+    # Port not in lookup — predict zone using K-Means
     coords = PORT_COORDS.get(port)
     if coords:
-        X = np.array([[coords["lat"], coords["lon"], 0.55]])
+        # Create DataFrame with proper feature names as expected by the fitted scaler
+        X = pd.DataFrame(
+            [[coords["lat"], coords["lon"], 0.55]], 
+            columns=["lat", "lon", "delay_rate"]
+        )
         X_scaled = loader.kmeans_scaler.transform(X)
         zone_id  = int(loader.kmeans_model.predict(X_scaled)[0])
 
