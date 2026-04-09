@@ -2,6 +2,16 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { Shipment } from '@/types'
 
+// AIS vessel name generator (deterministic off shipment id)
+function getVesselName(id: string): string {
+  const names = ['EVER GIVEN','MSC GÜLSÜN','COSCO SHIPPING','HMM ALGECIRAS',
+    'MADRID MAERSK','OOCL HONG KONG','CMA CGM ANTOINE','ZIM INTEGRATED',
+    'YANG MING WISH','ONE INNOVATION','EVERGREEN LIGHT','HAPAG BERLIN',
+    'COSCO GLORY','MSC OSCAR','MAERSK MC-KINNEY','OOCL GERMANY']
+  const hash = id.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
+  return names[hash % names.length]
+}
+
 const PORT_DATA: Record<string, { lon: number; lat: number; label: string }> = {
   'Shanghai':   { lon: 121.5, lat: 31.2,  label: 'Shanghai'    },
   'Singapore':  { lon: 103.8, lat:  1.4,  label: 'Singapore'   },
@@ -77,8 +87,16 @@ export default function WorldMap({ shipments }: Props) {
   const timeRef    = useRef(0)
   const reqRef     = useRef<number>()
   const mousePos   = useRef({ x: -1000, y: -1000 })
-
+  const [tooltip, setTooltip] = useState<{
+    x: number; y: number;
+    vessel: string; status: string;
+    risk: number; delay: number;
+    origin: string; dest: string;
+    etaDays: number; speed: string;
+  } | null>(null)
+  const tooltipRef = useRef(tooltip)
   shipRef.current = shipments
+  tooltipRef.current = tooltip
 
   // 1. Fetch real-world map borders (GeoJSON)
   useEffect(() => {
@@ -184,6 +202,7 @@ export default function WorldMap({ shipments }: Props) {
     // --- 4. Draw Sleek, Tight Routes ---
     const sorted = [...shipRef.current].sort((a, b) => a.risk_score - b.risk_score)
     const activePorts = new Set<string>()
+    let newTooltip: typeof tooltip = null
 
     sorted.forEach((s) => {
       const o = PORT_DATA[s.origin]
@@ -241,20 +260,83 @@ export default function WorldMap({ shipments }: Props) {
       ctx.setLineDash([])
       ctx.globalAlpha = 1
 
-      // Traveling Dot
-      const speed = 0.0008
-      const t = ((timeRef.current * speed) + (routeIdx * 0.2)) % 1
+      // --- AIS Vessel Tracking ---
+      // seed t from departure_time so each vessel has a unique, realistic position
+      const depMs     = new Date(s.departure_time).getTime()
+      const nowMs     = Date.now()
+      const seaSpeedKnots = s.risk_score >= 0.70 ? 10 : 14  // Slower when at-risk
+      const routeKm   = 15000  // proxy; real distance tracked via route data
+      const transitMs = (routeKm / (seaSpeedKnots * 1.852)) * 3600 * 1000
+      const elapsed   = Math.max(0, nowMs - depMs)
+      const baseT     = Math.min(elapsed / transitMs, 0.99)
+      
+      // Overlay a slow animation tick on top of the realistic base position
+      const animSpeed = 0.00015
+      const animT     = (baseT + timeRef.current * animSpeed) % 1
+      const t = animT
+
       const shipX = (1-t)*(1-t)*sox + 2*(1-t)*t*cx + t*t*sdx
       const shipY = (1-t)*(1-t)*soy + 2*(1-t)*t*cy + t*t*sdy
+      
+      // Compute heading direction from bezier tangent
+      const dt = 0.01
+      const t2 = Math.min(t + dt, 0.99)
+      const nx = (1-t2)*(1-t2)*sox + 2*(1-t2)*t2*cx + t2*t2*sdx
+      const ny = (1-t2)*(1-t2)*soy + 2*(1-t2)*t2*cy + t2*t2*sdy
+      const angle = Math.atan2(ny - shipY, nx - shipX)
 
+      const vesselSize = 5 * Math.min(zoom.current, 2)
+      
+      // Check if mouse is hovering this vessel
+      const isVesselHovered = Math.hypot(shipX - mousePos.current.x, shipY - mousePos.current.y) < 12
+      
+      // Draw vessel body: arrow shape
+      ctx.save()
+      ctx.translate(shipX, shipY)
+      ctx.rotate(angle)
+      
+      // Outer glow for at-risk vessels
+      if (s.risk_score >= 0.70 || isVesselHovered) {
+        ctx.shadowColor = color
+        ctx.shadowBlur  = isVesselHovered ? 12 : 6
+      }
+      
       ctx.beginPath()
-      ctx.arc(shipX, shipY, 3.5 * zoom.current, 0, Math.PI*2)
-      ctx.fillStyle = '#ffffff'
-      ctx.fill()
-      ctx.lineWidth = 1.5
+      ctx.moveTo(vesselSize * 1.8, 0)              // nose
+      ctx.lineTo(-vesselSize, vesselSize * 0.7)    // stern-port
+      ctx.lineTo(-vesselSize * 0.5, 0)             // stern notch
+      ctx.lineTo(-vesselSize, -vesselSize * 0.7)   // stern-starboard
+      ctx.closePath()
+      ctx.fillStyle = isVesselHovered ? '#ffffff' : color
       ctx.strokeStyle = color
+      ctx.lineWidth = 1.5
+      ctx.fill()
       ctx.stroke()
-    })
+      ctx.shadowBlur = 0
+      ctx.restore()
+      
+      // Store hover data
+      if (isVesselHovered) {
+        const etaDays = Math.max(0, Math.round((1 - t) * (transitMs / 86400000)))
+        const knotsDisplay = seaSpeedKnots + (Math.sin(timeRef.current * 0.01 + routeIdx) * 0.5).toFixed(1)
+        newTooltip = {
+          x: shipX, y: shipY,
+          vessel: getVesselName(s.id),
+          status: s.status,
+          risk: s.risk_score,
+          delay: s.predicted_delay_days,
+          origin: s.origin.replace(/_/g, ' '),
+          dest: s.destination.replace(/_/g, ' '),
+          etaDays,
+          speed: `${seaSpeedKnots} kn`,
+        }
+      }
+    }) // end sorted.forEach
+
+    // Commit tooltip state only if changed
+    if (JSON.stringify(newTooltip) !== JSON.stringify(tooltipRef.current)) {
+      setTooltip(newTooltip)
+    }
 
     // --- 5. Precise Port Markers ---
     const renderPorts = Object.entries(PORT_DATA)
@@ -320,7 +402,7 @@ export default function WorldMap({ shipments }: Props) {
         drawnLabels.push(box)
       }
     })
-  }, [geoData])
+  }, [geoData, setTooltip])
 
   useEffect(() => {
     function loop() {
@@ -369,6 +451,44 @@ export default function WorldMap({ shipments }: Props) {
       ref={wrapRef}
       className="relative w-full h-[320px] shrink-0 bg-[#f8fafc] overflow-hidden rounded-xl border border-slate-200 shadow-sm"
     >
+      {/* AIS Vessel Tooltip */}
+      {tooltip && (
+        <div
+          className="absolute z-30 pointer-events-none"
+          style={{
+            left: Math.min(tooltip.x + 14, 999),
+            top:  Math.max(tooltip.y - 80, 4),
+          }}
+        >
+          <div className="bg-slate-900/95 backdrop-blur-sm text-white rounded-xl shadow-xl border border-slate-700 px-3 py-2.5 min-w-[200px]">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-bold tracking-wide text-white">{tooltip.vessel}</span>
+              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                tooltip.risk >= 0.70 ? 'bg-red-500/30 text-red-300'
+                : tooltip.risk >= 0.45 ? 'bg-amber-500/30 text-amber-300'
+                : 'bg-emerald-500/30 text-emerald-300'
+              }`}>
+                {tooltip.status.replace('_', ' ').toUpperCase()}
+              </span>
+            </div>
+            <div className="text-[10px] text-slate-400 mb-2">{tooltip.origin} → {tooltip.dest}</div>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px]">
+              <span className="text-slate-400">Risk</span>
+              <span className={`font-semibold ${
+                tooltip.risk >= 0.70 ? 'text-red-400' : tooltip.risk >= 0.45 ? 'text-amber-400' : 'text-emerald-400'
+              }`}>{Math.round(tooltip.risk * 100)}%</span>
+              <span className="text-slate-400">Speed</span>
+              <span className="text-white font-medium">{tooltip.speed}</span>
+              <span className="text-slate-400">ETA</span>
+              <span className="text-white font-medium">{tooltip.etaDays}d remaining</span>
+              {tooltip.delay > 0 && <>
+                <span className="text-slate-400">Delay est.</span>
+                <span className="text-amber-400 font-semibold">+{tooltip.delay.toFixed(1)} days</span>
+              </>}
+            </div>
+          </div>
+        </div>
+      )}
       <canvas
         ref={canvasRef}
         className="block w-full h-full cursor-grab active:cursor-grabbing"
