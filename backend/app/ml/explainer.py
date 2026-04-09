@@ -51,22 +51,38 @@ def generate_explanation(prediction: dict, route: dict) -> dict:
         )
     drivers_text = "\n".join(drivers)
 
-    prompt_text = f"""You are a maritime logistics analyst writing a brief risk summary for a shipping manager.
+    # Extract intelligence notes for Gemini to use
+    intel_text = ""
+    try:
+        from app.engine.constraint_engine import get_constraint_details
+        details = get_constraint_details()
+        pass_through = route.get("passes_through", [])
+        snippets = []
+        for pid in pass_through:
+            d = details.get(pid)
+            if d and d["status"] in ["blocked", "restricted", "under_watch"]:
+                snippets.append(f"• {d['region_name']} ({d['status'].upper()}): {d['notes']}")
+        if snippets:
+            intel_text = "\nCritical Chokepoint Intelligence:\n" + "\n".join(snippets) + "\n"
+    except Exception:
+        pass
 
-Shipment details:
-- Route: {route.get('origin')} → {route.get('destination')}
-- Risk level: {STATUS_LABELS.get(status, status)} ({risk_score:.0%} probability of delay)
-- Predicted delay if disrupted: {delay_days:.1f} days
-- Distance: {route.get('distance_km', 0):,} km
-- Route reliability score: {route.get('reliability_score', 0):.0%}
+    prompt_text = f"""You are an elite maritime intelligence analyst briefing a Chief Supply Chain Officer (CSCO).
 
-Top factors driving this risk assessment:
+Shipment Route: {route.get('origin')} → {route.get('destination')}
+Proprietary Risk Level: {STATUS_LABELS.get(status, status)} ({risk_score:.0%} Probability of Delay)
+Predicted Days Lost: {delay_days:.1f} days
+Total Nautical Distance: {route.get('distance_km', 0):,} km
+Historical Route Reliability: {route.get('reliability_score', 0):.0%}
+
+Primary Predictive Risk Drivers:
 {drivers_text}
-
-Write 2-3 sentences plain English explanation of why this shipment is at risk and what a logistics manager should consider.
-Be specific about the maritime factors involved.
-Do not use technical ML terms like SHAP or model.
-End with one clear recommended action."""
+{intel_text}
+Provide a crisp, CEO-level executive summary (maximum 3-4 sentences) explaining the strategic risks confronting this exact shipment.
+Focus heavily on the economic, physical, and geopolitical realities of the chokepoints and weather conditions driving this delay. 
+Use the 'Critical Chokepoint Intelligence' provided above to formulate your answer natively. 
+Maintain a highly professional, commanding, and intelligence-driven tone. Be precise and specific about the maritime factors provided.
+Do NOT use technical ML jargon. Conclude with a single, clear, strategic recommendation for the executive (e.g., immediate reroute, accept risk, buffer inventory)."""
 
     try:
         client   = genai.Client(api_key=GEMINI_API_KEY)
@@ -75,11 +91,40 @@ End with one clear recommended action."""
             contents=prompt_text
         )
         explanation = response.text.strip()
-    except Exception:
+    except Exception as e:
+        print(f"DEBUG GEMINI ERROR: {str(e)}")
+        
+        # Highly intelligent local fallback if API key is invalid/exhausted
+        intel_text = ""
+        try:
+            from app.engine.constraint_engine import get_constraint_details
+            details = get_constraint_details()
+            pass_through = route.get("passes_through", [])
+            snippets = []
+            for pid in pass_through:
+                d = details.get(pid)
+                if d and d["status"] in ["blocked", "restricted", "under_watch"]:
+                    snippets.append(f"• Due to {d['notes'].lower().rstrip('.')}, the {d['region_name']} is currently {d['status'].upper()}.")
+            if snippets:
+                intel_text = "\nActive Chokepoint Intelligence:\n" + "\n".join(snippets) + "\n\n"
+        except Exception:
+            pass
+
+        factor_details = []
+        for item in top_shap[:3]:
+            label = FEATURE_LABELS.get(item["feature"], item["feature"])
+            direction = "Elevated risk" if item["direction"] == "increases_risk" else "Reduced risk"
+            factor_details.append(f"{label} ({direction})")
+            
+        factors_str = "; ".join(factor_details)
+        
         explanation = (
-            f"This shipment has a {risk_score:.0%} probability of delay "
-            f"with a predicted delay of {delay_days:.1f} days if disrupted. "
-            f"Key risk factors include geopolitical constraints and route conditions."
+            f"EXECUTIVE INTELLIGENCE: \n"
+            f"This shipment path ({route.get('origin')} → {route.get('destination')}) critically faces a {risk_score:.0%} probability of disruption, "
+            f"with an estimated {delay_days:.1f} days of strategic delay. \n\n"
+            f"Direct Route Constraints: The primary drivers are specifically tied to: {factors_str}. \n"
+            f"{intel_text}"
+            f"RECOMMENDATION: Immediate review of alternative routing corridors is advised to maintain supply chain flow and bypass these specific highlighted transit bottlenecks."
         )
 
     return {

@@ -140,7 +140,7 @@ export default function RouteAssessor() {
 
             <div className="col-span-2 bg-blue-50 border border-blue-100 rounded-xl p-4">
               <div className="text-xs font-semibold text-blue-700 mb-2">Analysis summary</div>
-              <p className="text-xs text-slate-700 leading-relaxed">
+              <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
                 {stripMarkdown(result.explanation.gemini_explanation)}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">

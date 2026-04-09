@@ -14,6 +14,13 @@ def get_constraint_statuses() -> dict:
     return {row["region_id"]: row["status"] for row in result.data}
 
 
+def get_constraint_details() -> dict:
+    result = supabase.table("constraints_table").select(
+        "region_id, region_name, status, notes"
+    ).execute()
+    return {row["region_id"]: row for row in result.data}
+
+
 def get_feasible_routes(origin: str, destination: str,
                         constraint_statuses: dict) -> list:
     result = supabase.table("routes").select("*").eq(
