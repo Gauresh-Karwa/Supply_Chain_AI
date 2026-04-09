@@ -42,13 +42,11 @@ def generate_explanation(prediction: dict, route: dict) -> dict:
     top_shap   = prediction["top_shap"]
 
     drivers = []
-    for item in top_shap[:3]:
+    for item in top_shap[:5]:
         label     = FEATURE_LABELS.get(item["feature"], item["feature"])
-        direction = "increasing" if item["direction"] == "increases_risk" else "decreasing"
-        drivers.append(
-            f"- {label} is {direction} delay risk "
-            f"(impact score: {abs(item['shap_value']):.3f})"
-        )
+        direction = "Elevated risk" if item["direction"] == "increases_risk" else "Reduced risk"
+        val       = item["value"]
+        drivers.append(f"- {label}: {val} unit impact ({direction})")
     drivers_text = "\n".join(drivers)
 
     # Extract intelligence notes for Gemini to use
@@ -78,11 +76,22 @@ Historical Route Reliability: {route.get('reliability_score', 0):.0%}
 Primary Predictive Risk Drivers:
 {drivers_text}
 {intel_text}
-Provide a crisp, CEO-level executive summary (maximum 3-4 sentences) explaining the strategic risks confronting this exact shipment.
-Focus heavily on the economic, physical, and geopolitical realities of the chokepoints and weather conditions driving this delay. 
-Use the 'Critical Chokepoint Intelligence' provided above to formulate your answer natively. 
-Maintain a highly professional, commanding, and intelligence-driven tone. Be precise and specific about the maritime factors provided.
-Do NOT use technical ML jargon. Conclude with a single, clear, strategic recommendation for the executive (e.g., immediate reroute, accept risk, buffer inventory)."""
+Provide a high-fidelity, tactical intelligence report structured as follows:
+
+**Operational Situation**
+- Use a 1-sentence analytical overview of the current route status.
+
+**Key Risk Drivers & Tactical Intel**
+- List 3-4 detailed bullet points. 
+- Use the 'Predictive Risk Drivers' and 'Critical Chokepoint Intelligence' provided.
+- CITE specific numbers.
+- Sound like a live intelligence wire.
+
+**Strategic Recommendation**
+- Provide exactly ONE actionable recommendation based on the risk level.
+
+Maintain a professional, authoritative, and data-driven tone. Avoid all-caps headers or ### markdown. Use bold Title Case headers.
+"""
 
     try:
         client   = genai.Client(api_key=GEMINI_API_KEY)
@@ -118,13 +127,22 @@ Do NOT use technical ML jargon. Conclude with a single, clear, strategic recomme
             
         factors_str = "; ".join(factor_details)
         
+        if status == "at_risk":
+            recommendation = "Immediate review of alternative routing corridors is advised to maintain supply chain flow and bypass these specific highlighted transit bottlenecks."
+        elif status == "watch":
+            recommendation = "Maintain current routing but monitor tactical intelligence closely; increased buffer inventory at destination is recommended."
+        else:
+            recommendation = "Proceed with this route as the primary strategic corridor. Current metrics indicate a profile consistent with stable operations."
+
         explanation = (
-            f"EXECUTIVE INTELLIGENCE: \n"
-            f"This shipment path ({route.get('origin')} → {route.get('destination')}) critically faces a {risk_score:.0%} probability of disruption, "
-            f"with an estimated {delay_days:.1f} days of strategic delay. \n\n"
-            f"Direct Route Constraints: The primary drivers are specifically tied to: {factors_str}. \n"
-            f"{intel_text}"
-            f"RECOMMENDATION: Immediate review of alternative routing corridors is advised to maintain supply chain flow and bypass these specific highlighted transit bottlenecks."
+            f"**Executive Intelligence Summary**\n"
+            f"Shipment {route.get('origin')} → {route.get('destination')} is currently classified as **{STATUS_LABELS.get(status, status)}**. "
+            f"The probability of disruption is {risk_score:.0%}, with a predicted strategic delay of {delay_days:.1f} days.\n\n"
+            f"**Tactical Risk Drivers**\n"
+            f"- Logistics Profile: {factors_str}.\n"
+            f"{intel_text}\n"
+            f"**Strategic Recommendation**\n"
+            f"{recommendation}"
         )
 
     return {
