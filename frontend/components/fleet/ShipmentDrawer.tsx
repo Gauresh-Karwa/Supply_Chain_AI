@@ -127,6 +127,19 @@ export default function ShipmentDrawer({ shipment, onClose }: Props) {
                 <span>{data.recommendation.distance_km.toLocaleString()} km</span>
                 <span>{Math.round(data.recommendation.base_time_hrs / 24)} days transit</span>
                 <span>{Math.round(data.recommendation.reliability_score * 100)}% reliability</span>
+                {data.prediction.weather && (
+                  <div className={`flex items-center gap-1 font-semibold px-2 py-0.5 rounded-full border w-fit mt-1 ${
+                    data.prediction.weather.origin_score > 2.5 
+                      ? 'bg-amber-50 text-amber-700 border-amber-200' 
+                      : 'bg-blue-50 text-blue-700 border-blue-200'
+                  }`}>
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+                    {data.prediction.weather.is_forecast ? 'Live Forecast' : 'Historical'}: {
+                      data.prediction.weather.origin_score >= 1.0 ? 'Severe' : 
+                      data.prediction.weather.origin_score >= 0.3 ? 'Moderate' : 'Clear'
+                    }
+                  </div>
+                )}
                 {data.recommendation.co2_emissions_tonnes !== undefined && (
                   <span className="flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>

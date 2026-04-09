@@ -46,6 +46,11 @@ export interface Prediction {
   delay_days: number
   status: string
   top_shap: ShapItem[]
+  weather?: {
+    origin_score: number
+    route_score: number
+    is_forecast: boolean
+  }
 }
 
 export interface Explanation {
