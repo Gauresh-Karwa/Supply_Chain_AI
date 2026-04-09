@@ -199,6 +199,12 @@ export default function RouteCompare() {
                       {data.delay_days.toFixed(1)} days estimated delay
                     </div>
                   )}
+                  {(data as any).co2_emissions_tonnes !== undefined && (
+                    <div className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      {(data as any).co2_emissions_tonnes.toLocaleString()} tCO₂
+                    </div>
+                  )}
                 </div>
               )
             })}
@@ -210,23 +216,32 @@ export default function RouteCompare() {
               ? 'bg-green-50 border-green-200 text-green-800'
               : 'bg-red-50 border-red-200 text-red-800'
           }`}>
-            <div className="text-xs font-semibold mb-1">
+            <div className="text-xs font-semibold mb-2">
               {result.delta.risk_change < 0
                 ? '✓ Switching to the alternate route reduces risk'
                 : '✗ Switching to the alternate route increases risk'}
             </div>
-            <div className="text-xs opacity-80">
-              Risk {result.delta.risk_change < 0 ? 'reduces' : 'increases'} by{' '}
-              {Math.abs(Math.round(result.delta.risk_change * 100))}% ·{' '}
-              Delay {result.delta.delay_change_days < 0 ? 'reduces' : 'increases'} by{' '}
-              {Math.abs(result.delta.delay_change_days).toFixed(1)} days
+            <div className="text-xs opacity-80 space-y-1">
+              <div>Risk {result.delta.risk_change < 0 ? 'reduces' : 'increases'} by{' '}
+                {Math.abs(Math.round(result.delta.risk_change * 100))}%
+              </div>
+              <div>Delay {result.delta.delay_change_days < 0 ? 'reduces' : 'increases'} by{' '}
+                {Math.abs(result.delta.delay_change_days).toFixed(1)} days
+              </div>
+              {result.delta.co2_change_tonnes !== undefined && (
+                <div className="flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  CO₂ footprint {result.delta.co2_change_tonnes < 0 ? 'reduces' : 'increases'} by{' '}
+                  {Math.abs(result.delta.co2_change_tonnes).toLocaleString()} tCO₂
+                </div>
+              )}
             </div>
           </div>
 
           {/* Gemini analysis */}
           <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
             <div className="text-xs font-semibold text-blue-700 mb-2">Expert analysis</div>
-            <p className="text-xs text-slate-700 leading-relaxed">
+            <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
               {stripMarkdown(result.gemini_comparison)}
             </p>
           </div>

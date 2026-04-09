@@ -22,6 +22,7 @@ export interface Route {
   cost_estimate: number
   passes_through: string[]
   transport_mode: string
+  co2_emissions_tonnes?: number
 }
 
 export interface Constraint {

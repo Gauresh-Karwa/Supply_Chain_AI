@@ -75,6 +75,7 @@ async def predict_shipment(req: PredictRequest):
             "distance_km":       best_route["distance_km"],
             "base_time_hrs":     best_route["base_time_hrs"],
             "reliability_score": best_route["reliability_score"],
+            "co2_emissions_tonnes": best_route.get("co2_emissions_tonnes", 0),
             "composite_score":   best_route["composite_score"],
             "rank":              1,
         },
@@ -94,6 +95,7 @@ async def predict_shipment(req: PredictRequest):
                 "distance_km":       r["distance_km"],
                 "base_time_hrs":     r["base_time_hrs"],
                 "reliability_score": r["reliability_score"],
+                "co2_emissions_tonnes": r.get("co2_emissions_tonnes", 0),
                 "composite_score":   r["composite_score"],
                 "risk_score":        r["prediction"]["risk_score"],
                 "delay_days":        r["prediction"]["delay_days"],
@@ -149,23 +151,45 @@ async def whatif_simulation(req: WhatIfRequest):
     risk_delta  = round(alternate_pred["risk_score"] - current_pred["risk_score"], 4)
     delay_delta = round(alternate_pred["delay_days"] - current_pred["delay_days"], 2)
 
+    co2_delta = round(alternate_scored.get("co2_emissions_tonnes", 0) - current_scored.get("co2_emissions_tonnes", 0), 2)
+    
+    # Intelligence fetching
+    intel_text = ""
+    try:
+        from app.engine.constraint_engine import get_constraint_details
+        details = get_constraint_details()
+        alt_pass = alternate_route.get("passes_through", [])
+        snippets = []
+        for pid in alt_pass:
+            d = details.get(pid)
+            if d and d["status"] in ["blocked", "restricted", "under_watch"]:
+                snippets.append(f"• Due to {d['notes'].lower().rstrip('.')}, the {d['region_name']} is {d['status'].upper()}.")
+        if snippets:
+            intel_text = "\n\nAlternate Route Chokepoint Intelligence:\n" + "\n".join(snippets)
+    except Exception:
+        pass
+
     prompt = f"""You are a maritime logistics analyst comparing two shipping routes.
 
 Current route: {current_route['origin']} → {current_route['destination']}
   via: {' → '.join(current_route.get('waypoints', []))}
   Risk score: {current_pred['risk_score']:.0%}
   Predicted delay: {current_pred['delay_days']:.1f} days
+  CO2 Emissions: {current_scored.get('co2_emissions_tonnes', 0)} tCO₂
 
 Alternate route: {alternate_route['origin']} → {alternate_route['destination']}
   via: {' → '.join(alternate_route.get('waypoints', []))}
   Risk score: {alternate_pred['risk_score']:.0%}
   Predicted delay: {alternate_pred['delay_days']:.1f} days
+  CO2 Emissions: {alternate_scored.get('co2_emissions_tonnes', 0)} tCO₂
 
 Risk change: {'improves by' if risk_delta < 0 else 'worsens by'} {abs(risk_delta):.0%}
 Delay change: {'reduces by' if delay_delta < 0 else 'increases by'} {abs(delay_delta):.1f} days
+CO2 change: {'reduces by' if co2_delta < 0 else 'increases by'} {abs(co2_delta)} tCO₂
+{intel_text}
 
-Write 2-3 sentences explaining what switching routes means for this shipment.
-Be specific about the maritime regions and constraints involved.
+Provide a cohesive intelligence summary explaining what switching routes means. 
+Focus on the geopolitical constraints, the delay shift, and the CO2 impact.
 Give a clear recommendation."""
 
     try:
@@ -176,12 +200,18 @@ Give a clear recommendation."""
         )
         comparison = response.text.strip()
     except Exception:
+        
+        # Native intelligence fallback
+        dir_risk = "reduces" if risk_delta < 0 else "increases"
+        dir_delay = "reduces" if delay_delta < 0 else "increases"
+        dir_co2 = "reduces" if co2_delta < 0 else "increases"
+        
         comparison = (
-            f"Switching to the alternate route "
-            f"{'reduces' if risk_delta < 0 else 'increases'} delay risk by "
-            f"{abs(risk_delta):.0%} and "
-            f"{'reduces' if delay_delta < 0 else 'increases'} predicted delay by "
-            f"{abs(delay_delta):.1f} days."
+            f"STRATEGIC ROUTE ANALYSIS:\n"
+            f"Executing a diversion to the alternate route via {', '.join(alternate_route.get('waypoints', ['this corridor']))} {dir_risk} total delay risk by {abs(risk_delta):.0%} "
+            f"and specifically {dir_delay} estimated days-lost by {abs(delay_delta):.1f} days.\n\n"
+            f"CO₂ Environmental Impact: This diversion {dir_co2} the vessel's carbon footprint by {abs(co2_delta)} tCO₂.{intel_text}\n\n"
+            f"RECOMMENDATION: {'Execute' if risk_delta < 0 else 'Decline'} strategic diversion order based on current chokepoint telemetry."
         )
 
     return {
@@ -202,6 +232,7 @@ Give a clear recommendation."""
         "delta": {
             "risk_change":       risk_delta,
             "delay_change_days": delay_delta,
+            "co2_change_tonnes": co2_delta,
             "recommendation":    "switch" if risk_delta < 0 else "keep_current",
         },
         "gemini_comparison": comparison,

@@ -12,10 +12,11 @@ RISK_THRESHOLD_HIGH   = 0.70   # above this → high risk alert
 RISK_THRESHOLD_MEDIUM = 0.45   # above this → medium risk
 
 # Decision engine weights
-W1_DELAY_RISK   = 0.40
-W2_RELIABILITY  = 0.30
-W3_COST         = 0.15
-W4_TIME         = 0.15
+W1_DELAY_RISK   = 0.35
+W2_RELIABILITY  = 0.25
+W3_COST         = 0.12
+W4_TIME         = 0.12
+W5_EMISSIONS    = 0.16
 
 # Port coordinates — used for weather + zone lookup for new ports
 PORT_COORDS = {
