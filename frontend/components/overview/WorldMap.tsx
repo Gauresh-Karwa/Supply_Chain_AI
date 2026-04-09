@@ -95,6 +95,7 @@ export default function WorldMap({ shipments }: Props) {
     etaDays: number; speed: string;
   } | null>(null)
   const tooltipRef = useRef(tooltip)
+  
   shipRef.current = shipments
   tooltipRef.current = tooltip
 
