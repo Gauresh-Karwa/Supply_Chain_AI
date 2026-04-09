@@ -28,6 +28,11 @@ shipments = [
     {"origin": "Busan",     "destination": "Singapore",  "departure_time": "2025-06-24T11:00:00"},
     {"origin": "Djibouti",  "destination": "Rotterdam",  "departure_time": "2025-06-17T07:00:00"},
     {"origin": "Hamburg",   "destination": "Piraeus",    "departure_time": "2025-06-13T09:00:00"},
+    {"origin": "Los_Angeles", "destination": "New_York", "departure_time": "2025-06-16T10:00:00"},
+    {"origin": "Los_Angeles", "destination": "New_York", "departure_time": "2025-07-02T08:00:00"},
+    {"origin": "Santos",    "destination": "Rotterdam",  "departure_time": "2025-06-18T09:00:00"},
+    {"origin": "Sydney",    "destination": "Los_Angeles","departure_time": "2025-06-25T14:00:00"},
+    {"origin": "Melbourne", "destination": "Singapore",  "departure_time": "2025-06-20T11:00:00"},
 ]
 
 supabase.table("shipments").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
