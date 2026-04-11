@@ -85,7 +85,7 @@ export default function WorldMap({ shipments }: Props) {
   const shipRef    = useRef<Shipment[]>([])
   const routeIdxRef = useRef<Record<string, number>>({})
   const timeRef    = useRef(0)
-  const reqRef     = useRef<number>()
+  const reqRef     = useRef<number>(0)
   const mousePos   = useRef({ x: -1000, y: -1000 })
   const [tooltip, setTooltip] = useState<{
     x: number; y: number;
