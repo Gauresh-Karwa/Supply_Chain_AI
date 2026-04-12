@@ -299,6 +299,7 @@ export default function CostAnalysisPage() {
                             </BarChart>
                          </ResponsiveContainer>
                        </div>
+                       
                        {/* AI Rationale Block */}
                        <div className="flex w-full mt-6 bg-blue-50 border border-blue-100 rounded-xl p-5 items-start gap-4">
                          <div className="p-2 bg-blue-100 rounded-lg text-blue-600 shrink-0 mt-0.5">
