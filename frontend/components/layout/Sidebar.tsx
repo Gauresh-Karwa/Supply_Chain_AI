@@ -6,8 +6,10 @@ const NAV = [
   { href: '/overview',     label: 'Overview',           section: 'main'  },
   { href: '/fleet',        label: 'Fleet tracker',      section: 'main'  },
   { href: '/intelligence', label: 'Route intelligence', section: 'tools' },
-  { href: '/alerts',       label: 'Global alerts',      section: 'tools' },
-  { href: '/cost-analysis',label: 'Cost analysis',      section: 'tools' },
+  { href: '/alerts',        label: 'Global alerts',      section: 'tools' },
+  { href: '/cost-analysis', label: 'Cost analysis',      section: 'tools' },
+  { href: '/port-traffic',  label: 'Port traffic',       section: 'tools' },
+  { href: '/inventory',     label: 'Inventory alerts',   section: 'tools' },
 ]
 
 export default function Sidebar() {

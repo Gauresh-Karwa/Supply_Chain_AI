@@ -64,6 +64,14 @@ async def refresh_shipment_risks():
 
     print(f"[scheduler] Updated {updated}/{len(shipments)} shipments")
 
+    # Phase 7: Trigger port congestion generation
+    from app.engine.congestion_engine import generate_port_congestion
+    generate_port_congestion()
+
+    # Phase 8: Recompute inventory alerts using fresh delay data
+    from app.engine.inventory_engine import compute_inventory_alerts
+    compute_inventory_alerts()
+
 
 def start_scheduler():
     scheduler.add_job(

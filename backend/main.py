@@ -6,8 +6,10 @@ from app.api.predict        import router as predict_router
 from app.api.shipments      import router as shipments_router
 from app.api.routes_api     import router as routes_router
 from app.api.constraints_api import router as constraints_router
-from app.api.cost_analysis   import router as cost_analysis_router
-from app.scheduler          import start_scheduler
+from app.api.cost_analysis      import router as cost_analysis_router
+from app.api.port_congestion    import router as port_congestion_router
+from app.api.inventory          import router as inventory_router
+from app.scheduler              import start_scheduler
 
 
 @asynccontextmanager
@@ -45,6 +47,8 @@ app.include_router(shipments_router)
 app.include_router(routes_router)
 app.include_router(constraints_router)
 app.include_router(cost_analysis_router)
+app.include_router(port_congestion_router)
+app.include_router(inventory_router)
 
 
 @app.get("/health")

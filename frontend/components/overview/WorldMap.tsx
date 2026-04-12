@@ -286,7 +286,7 @@ export default function WorldMap({ shipments }: Props) {
       const ny = (1-t2)*(1-t2)*soy + 2*(1-t2)*t2*cy + t2*t2*sdy
       const angle = Math.atan2(ny - shipY, nx - shipX)
 
-      const vesselSize = 5 * Math.min(zoom.current, 2)
+      const vesselSize = 3 * Math.min(zoom.current, 2)
       
       // Check if mouse is hovering this vessel
       const isVesselHovered = Math.hypot(shipX - mousePos.current.x, shipY - mousePos.current.y) < 12
@@ -478,8 +478,6 @@ export default function WorldMap({ shipments }: Props) {
               <span className={`font-semibold ${
                 tooltip.risk >= 0.70 ? 'text-red-400' : tooltip.risk >= 0.45 ? 'text-amber-400' : 'text-emerald-400'
               }`}>{Math.round(tooltip.risk * 100)}%</span>
-              <span className="text-slate-400">Speed</span>
-              <span className="text-white font-medium">{tooltip.speed}</span>
               <span className="text-slate-400">ETA</span>
               <span className="text-white font-medium">{tooltip.etaDays}d remaining</span>
               {tooltip.delay > 0 && <>
