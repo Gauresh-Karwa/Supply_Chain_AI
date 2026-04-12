@@ -4,6 +4,29 @@ import { predictRoute, fetchRoutes, stripMarkdown } from '@/lib/api'
 import { PredictResponse, Route } from '@/types'
 import RiskGauge from './RiskGauge'
 import ShapChart from './ShapChart'
+import RouteMap from './RouteMap'
+
+const PORT_COORDS: Record<string, { lon: number; lat: number }> = {
+  'Shanghai':     { lon: 121.5, lat: 31.2 },
+  'Singapore':    { lon: 103.8, lat:  1.4 },
+  'Rotterdam':    { lon:   4.5, lat: 51.9 },
+  'Dubai':        { lon:  55.3, lat: 25.2 },
+  'Mumbai':       { lon:  72.8, lat: 18.9 },
+  'Colombo':      { lon:  79.9, lat:  6.9 },
+  'Busan':        { lon: 129.1, lat: 35.2 },
+  'Hong_Kong':    { lon: 114.2, lat: 22.3 },
+  'Hamburg':      { lon:  10.0, lat: 53.6 },
+  'Antwerp':      { lon:   4.4, lat: 51.2 },
+  'Piraeus':      { lon:  23.6, lat: 37.9 },
+  'Karachi':      { lon:  67.0, lat: 24.9 },
+  'Djibouti':     { lon:  43.1, lat: 11.6 },
+  'Port_Klang':   { lon: 101.4, lat:  3.0 },
+  'Los_Angeles':  { lon:-118.2, lat: 34.1 },
+  'New_York':     { lon: -74.0, lat: 40.7 },
+  'Santos':       { lon: -46.3, lat:-24.0 },
+  'Sydney':       { lon: 151.2, lat:-33.9 },
+  'Cape_Town':    { lon:  18.4, lat:-33.9 },
+}
 
 function routeLabel(waypoints: string[]): string {
   const keyMap: Record<string, string> = {
@@ -123,6 +146,20 @@ export default function RouteAssessor() {
               ⚠ {result.warning}
             </div>
           )}
+
+          {/* Map visualisation section */}
+          <div className="h-64 mb-4">
+            <RouteMap routes={[
+              {
+                id: 'main',
+                origin: { ...(PORT_COORDS[result.recommendation.origin] || { lon: 0, lat: 0 }), label: result.recommendation.origin },
+                destination: { ...(PORT_COORDS[result.recommendation.destination] || { lon: 0, lat: 0 }), label: result.recommendation.destination },
+                color: result.prediction.risk_score >= 0.7 ? '#ef4444' : result.prediction.risk_score >= 0.45 ? '#f59e0b' : '#10b981',
+                label: 'Recommended Route',
+                isDashed: result.prediction.risk_score >= 0.7
+              }
+            ]} />
+          </div>
 
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center">

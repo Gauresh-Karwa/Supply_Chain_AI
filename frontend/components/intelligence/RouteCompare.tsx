@@ -1,7 +1,30 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { fetchRoutes, fetchRoutesForPair, whatIfSimulation, stripMarkdown } from '@/lib/api'
 import { Route } from '@/types'
+import { fetchRoutes, fetchRoutesForPair, whatIfSimulation, stripMarkdown } from '@/lib/api'
+import RouteMap from './RouteMap'
+
+const PORT_COORDS: Record<string, { lon: number; lat: number }> = {
+  'Shanghai':     { lon: 121.5, lat: 31.2 },
+  'Singapore':    { lon: 103.8, lat:  1.4 },
+  'Rotterdam':    { lon:   4.5, lat: 51.9 },
+  'Dubai':        { lon:  55.3, lat: 25.2 },
+  'Mumbai':       { lon:  72.8, lat: 18.9 },
+  'Colombo':      { lon:  79.9, lat:  6.9 },
+  'Busan':        { lon: 129.1, lat: 35.2 },
+  'Hong_Kong':    { lon: 114.2, lat: 22.3 },
+  'Hamburg':      { lon:  10.0, lat: 53.6 },
+  'Antwerp':      { lon:   4.4, lat: 51.2 },
+  'Piraeus':      { lon:  23.6, lat: 37.9 },
+  'Karachi':      { lon:  67.0, lat: 24.9 },
+  'Djibouti':     { lon:  43.1, lat: 11.6 },
+  'Port_Klang':   { lon: 101.4, lat:  3.0 },
+  'Los_Angeles':  { lon:-118.2, lat: 34.1 },
+  'New_York':     { lon: -74.0, lat: 40.7 },
+  'Santos':       { lon: -46.3, lat:-24.0 },
+  'Sydney':       { lon: 151.2, lat:-33.9 },
+  'Cape_Town':    { lon:  18.4, lat:-33.9 },
+}
 
 function routeDisplayName(route: Route): string {
   const keyMap: Record<string, string> = {
@@ -165,7 +188,7 @@ export default function RouteCompare() {
               { label: 'Current route',   data: result.current_route,   info: routeAData },
               { label: 'Alternate route', data: result.alternate_route, info: routeBData },
             ] as const).map(({ label, data, info }, i) => {
-              const isRecommended = i === 1 && result.delta.recommendation === 'switch'
+              const isRecommended = (i === 1 && result.delta.recommendation === 'switch') || (i === 0 && result.delta.recommendation !== 'switch')
               return (
                 <div
                   key={i}
@@ -208,6 +231,27 @@ export default function RouteCompare() {
                 </div>
               )
             })}
+          </div>
+
+          {/* Map visualisation for comparison */}
+          <div className="h-64 mb-4">
+            <RouteMap routes={[
+              result.delta.recommendation === 'switch' ? {
+                id: 'route-b',
+                origin: { ...(PORT_COORDS[origin] || { lon: 0, lat: 0 }), label: origin },
+                destination: { ...(PORT_COORDS[dest] || { lon: 0, lat: 0 }), label: dest },
+                color: '#10b981',
+                label: 'Recommended Route',
+                isDashed: false
+              } : {
+                id: 'route-a',
+                origin: { ...(PORT_COORDS[origin] || { lon: 0, lat: 0 }), label: origin },
+                destination: { ...(PORT_COORDS[dest] || { lon: 0, lat: 0 }), label: dest },
+                color: '#3b82f6',
+                label: 'Current Route',
+                isDashed: true
+              }
+            ]} />
           </div>
 
           {/* Delta */}
