@@ -56,8 +56,8 @@ export async function predictRoute(
     body:    JSON.stringify({
       origin,
       destination,
-      departure_date: departureDate,
-    }),
+      departure_date: departureDate
+    })
   })
   if (!res.ok) throw new Error('Prediction failed')
   return res.json()
@@ -78,8 +78,8 @@ export async function whatIfSimulation(
       destination,
       departure_date:     departureDate,
       current_route_id:   currentRouteId,
-      alternate_route_id: alternateRouteId,
-    }),
+      alternate_route_id: alternateRouteId
+    })
   })
   if (!res.ok) throw new Error('What-if simulation failed')
   return res.json()

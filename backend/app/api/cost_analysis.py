@@ -32,5 +32,14 @@ async def list_analyses():
 @router.post("")
 async def create_analysis(body: CostAnalysisCreate):
     data = body.model_dump()
+    data["created_at"] = datetime.utcnow().isoformat()
     result = supabase.table("cost_analyses").insert(data).execute()
     return result.data[0]
+
+@router.delete("/{analysis_id}")
+async def delete_analysis(analysis_id: str):
+    result = supabase.table("cost_analyses").delete().eq("id", analysis_id).execute()
+    if not result.data:
+        raise HTTPException(404, "Analysis not found")
+    return {"message": "Deleted", "id": analysis_id}
+

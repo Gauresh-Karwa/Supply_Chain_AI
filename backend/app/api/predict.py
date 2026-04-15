@@ -4,6 +4,7 @@ POST /whatif   — alternate route simulation
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from typing import Optional
 from datetime import datetime
 from google import genai
 
@@ -175,6 +176,7 @@ async def whatif_simulation(req: WhatIfRequest):
         pass
 
     prompt = f"""You are a maritime logistics analyst comparing two shipping routes.
+Please provide bullet points as plain numbers (1., 2.) or short lines without using asterisk (*) characters.
 
 Current route: {current_route['origin']} → {current_route['destination']}
   via: {' → '.join(current_route.get('waypoints', []))}

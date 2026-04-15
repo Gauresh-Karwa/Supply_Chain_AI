@@ -66,6 +66,7 @@ def generate_explanation(prediction: dict, route: dict) -> dict:
         pass
 
     prompt_text = f"""You are an elite maritime intelligence analyst briefing a Chief Supply Chain Officer (CSCO).
+Please DO NOT use asterisk (*) characters for bullet points. Provide bullet points as plain numbers (1., 2.) or pure text dashes (-).
 
 Shipment Route: {route.get('origin')} → {route.get('destination')}
 Proprietary Risk Level: {STATUS_LABELS.get(status, status)} ({risk_score:.0%} Probability of Delay)
@@ -76,6 +77,7 @@ Historical Route Reliability: {route.get('reliability_score', 0):.0%}
 Primary Predictive Risk Drivers:
 {drivers_text}
 {intel_text}
+
 Provide a high-fidelity, tactical intelligence report structured as follows:
 
 **Operational Situation**

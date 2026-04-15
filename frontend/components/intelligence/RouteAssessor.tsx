@@ -86,7 +86,7 @@ export default function RouteAssessor() {
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      <div className="bg-white border border-slate-200 rounded-xl p-5 mb-5">
+      <div className="bg-white border border-slate-200 rounded-xl p-5 mb-5 shadow-sm">
         <h2 className="text-sm font-semibold text-slate-800 mb-4">Route details</h2>
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div>
@@ -131,7 +131,7 @@ export default function RouteAssessor() {
 
         {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
         <button
-          onClick={handleAssess}
+          onClick={() => handleAssess()}
           disabled={loading || !origin || !dest || !date}
           className="bg-blue-600 text-white text-xs font-semibold px-5 py-2.5 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
         >

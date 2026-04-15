@@ -52,6 +52,12 @@ def rank_routes(routes: list, departure_date: datetime,
     min_t, max_t = min(times), max(times)
     min_co2, max_co2 = min(co2s), max(co2s)
 
+    w1 = W1_DELAY_RISK
+    w2 = W2_RELIABILITY
+    w3 = W3_COST
+    w4 = W4_TIME
+    w5 = W5_EMISSIONS
+
     for route in scored:
         risk        = route["prediction"]["risk_score"]
         reliability = route["reliability_score"]
@@ -60,11 +66,11 @@ def rank_routes(routes: list, departure_date: datetime,
         norm_co2    = ((route.get("co2_emissions_tonnes", 0) - min_co2) / (max_co2 - min_co2 + 1e-9))
 
         composite = (
-            W1_DELAY_RISK  * risk +
-            W2_RELIABILITY * (1 - reliability) +
-            W3_COST        * norm_cost +
-            W4_TIME        * norm_time +
-            W5_EMISSIONS   * norm_co2
+            w1 * risk +
+            w2 * (1 - reliability) +
+            w3 * norm_cost +
+            w4 * norm_time +
+            w5 * norm_co2
         )
         route["composite_score"] = round(composite, 4)
 

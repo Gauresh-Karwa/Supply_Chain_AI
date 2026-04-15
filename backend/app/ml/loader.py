@@ -14,9 +14,15 @@ regressor = xgb.XGBRegressor()
 regressor.load_model(os.path.join(ML_DIR, "xgb_regressor.ubj"))
 
 # ── SHAP + clustering models ──────────────────────────────────────────
-shap_explainer = joblib.load(os.path.join(ML_DIR, "shap_explainer.joblib"))
-kmeans_model   = joblib.load(os.path.join(ML_DIR, "kmeans_model.joblib"))
-kmeans_scaler  = joblib.load(os.path.join(ML_DIR, "kmeans_scaler.joblib"))
+try:
+    shap_explainer = joblib.load(os.path.join(ML_DIR, "shap_explainer.joblib"))
+    kmeans_model   = joblib.load(os.path.join(ML_DIR, "kmeans_model.joblib"))
+    kmeans_scaler  = joblib.load(os.path.join(ML_DIR, "kmeans_scaler.joblib"))
+except Exception as e:
+    print(f"WARNING: SHAP/Clustering models could not be loaded: {e}")
+    shap_explainer = None
+    kmeans_model   = None
+    kmeans_scaler  = None
 
 # ── Lookup tables ─────────────────────────────────────────────────────
 port_zone_lookup       = pd.read_csv(os.path.join(ML_DIR, "port_zone_lookup.csv"))
