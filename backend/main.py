@@ -9,6 +9,7 @@ from app.api.constraints_api import router as constraints_router
 from app.api.cost_analysis      import router as cost_analysis_router
 from app.api.port_congestion    import router as port_congestion_router
 from app.api.inventory          import router as inventory_router
+from app.api.scenarios          import router as scenarios_router
 from app.scheduler              import start_scheduler
 
 
@@ -49,6 +50,7 @@ app.include_router(constraints_router)
 app.include_router(cost_analysis_router)
 app.include_router(port_congestion_router)
 app.include_router(inventory_router)
+app.include_router(scenarios_router)
 
 
 @app.get("/health")

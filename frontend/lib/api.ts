@@ -84,3 +84,36 @@ export async function whatIfSimulation(
   if (!res.ok) throw new Error('What-if simulation failed')
   return res.json()
 }
+
+export async function simulateScenario(
+  blockedRegions: string[],
+  restrictedRegions: string[],
+  scenarioName: string,
+  save = false
+) {
+  const res = await fetch(`${BASE}/scenarios/simulate`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({
+      blocked_regions:    blockedRegions,
+      restricted_regions: restrictedRegions,
+      scenario_name:      scenarioName,
+      save_simulation:    save,
+    }),
+  })
+  if (!res.ok) throw new Error('Scenario simulation failed')
+  return res.json()
+}
+
+export async function applyConstraintOverrides(
+  overrides: Record<string, 'open' | 'restricted' | 'blocked'>
+) {
+  const updates = Object.entries(overrides).map(([regionId, status]) =>
+    fetch(`${BASE}/constraints/${regionId}`, {
+      method:  'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ status }),
+    })
+  )
+  await Promise.all(updates)
+}

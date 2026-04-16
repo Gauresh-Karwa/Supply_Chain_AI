@@ -1,10 +1,10 @@
 'use client'
 import { useEffect, useRef, useCallback, useState } from 'react'
-import { Shipment } from '@/types'
+import { Shipment, SimulationResult } from '@/types'
 
 // AIS vessel name generator (deterministic off shipment id)
 function getVesselName(id: string): string {
-  const names = ['EVER GIVEN','MSC GÜLSÜN','COSCO SHIPPING','HMM ALGECIRAS',
+  const names = ['EVER GIVEN','MSC GULSUN','COSCO SHIPPING','HMM ALGECIRAS',
     'MADRID MAERSK','OOCL HONG KONG','CMA CGM ANTOINE','ZIM INTEGRATED',
     'YANG MING WISH','ONE INNOVATION','EVERGREEN LIGHT','HAPAG BERLIN',
     'COSCO GLORY','MSC OSCAR','MAERSK MC-KINNEY','OOCL GERMANY']
@@ -71,9 +71,13 @@ const MAP_BOUNDS = { lonMin: -130, lonMax: 160, latMin: -45, latMax: 65 }
 const [mxMin, myMin] = toMercator(MAP_BOUNDS.lonMin, MAP_BOUNDS.latMax) // Top-Left
 const [mxMax, myMax] = toMercator(MAP_BOUNDS.lonMax, MAP_BOUNDS.latMin) // Bottom-Right
 
-interface Props { shipments: Shipment[] }
+interface Props {
+  shipments: Shipment[]
+  simulationResult?: SimulationResult | null
+  activeScenario?: { blocked: string[]; restricted: string[] }
+}
 
-export default function WorldMap({ shipments }: Props) {
+export default function WorldMap({ shipments, simulationResult, activeScenario }: Props) {
   const canvasRef  = useRef<HTMLCanvasElement>(null)
   const wrapRef    = useRef<HTMLDivElement>(null)
   
@@ -200,66 +204,87 @@ export default function WorldMap({ shipments }: Props) {
       }
     })
 
-    // --- 4. Draw Sleek, Tight Routes ---
-    const sorted = [...shipRef.current].sort((a, b) => a.risk_score - b.risk_score)
-    const activePorts = new Set<string>()
-    let newTooltip: typeof tooltip = null
+      // --- 4. Draw Sleek, Tight Routes ---
+      const isSimulation = !!simulationResult
+      const allAffected = simulationResult ? [...simulationResult.affected_vessels, ...simulationResult.exposed_vessels] : []
 
-    sorted.forEach((s) => {
-      const o = PORT_DATA[s.origin]
-      const d = PORT_DATA[s.destination]
-      if (!o || !d) return
+      const sorted = [...shipRef.current].sort((a, b) => a.risk_score - b.risk_score)
+      const activePorts = new Set<string>()
+      let newTooltip: typeof tooltip = null
 
-      activePorts.add(s.origin)
-      activePorts.add(s.destination)
+      sorted.forEach((s) => {
+        const o = PORT_DATA[s.origin]
+        const d = PORT_DATA[s.destination]
+        if (!o || !d) return
 
-      const [ox, oy] = getPos(o.lon, o.lat)
-      const [dx, dy] = getPos(d.lon, d.lat)
+        activePorts.add(s.origin)
+        activePorts.add(s.destination)
 
-      const ddx = dx - ox, ddy = dy - oy
-      const len = Math.hypot(ddx, ddy) || 1
-      const normX = ddx / len, normY = ddy / len
-      const perpX = -normY, perpY = normX
+        const [ox, oy] = getPos(o.lon, o.lat)
+        const [dx, dy] = getPos(d.lon, d.lat)
 
-      // Tightened spacing to reduce messiness
-      const routeIdx = routeIdxRef.current[s.id] ?? 0
-      const totalForPair = shipRef.current.filter(x => x.origin === s.origin && x.destination === s.destination).length
-      // Offset applies only to curve control point to bundle the departure/arrivals
-      const offsetAmt = totalForPair > 1 ? (routeIdx - (totalForPair - 1) / 2) * (12 * zoom.current) : 0
+        // Find if this vessel is part of the simulation results
+        const simVessel = allAffected.find(v => v.shipment_id === s.id)
 
-      const sox = ox
-      const soy = oy
-      const sdx = dx
-      const sdy = dy
+        const ddx = dx - ox, ddy = dy - oy
+        const len = Math.hypot(ddx, ddy) || 1
+        const normX = ddx / len, normY = ddy / len
+        const perpX = -normY, perpY = normX
 
-      const midX = (ox + dx) / 2
-      const midY = (oy + dy) / 2
-      
-      const curvature = len * 0.15
-      const cx = midX + perpX * (curvature + offsetAmt)
-      const cy = midY + perpY * (curvature + offsetAmt)
+        const routeIdx = routeIdxRef.current[s.id] ?? 0
+        const totalForPair = shipRef.current.filter(x => x.origin === s.origin && x.destination === s.destination).length
+        const offsetAmt = totalForPair > 1 ? (routeIdx - (totalForPair - 1) / 2) * (12 * zoom.current) : 0
 
-      let color = '#10b981'
-      if (s.risk_score >= 0.70) color = '#ef4444'
-      else if (s.risk_score >= 0.45) color = '#f59e0b'
+        const sox = ox, soy = oy, sdx = dx, sdy = dy
+        const midX = (ox + dx) / 2, midY = (oy + dy) / 2
 
-      ctx.beginPath()
-      ctx.moveTo(sox, soy)
-      ctx.quadraticCurveTo(cx, cy, sdx, sdy)
-      
-      ctx.strokeStyle = color
-      ctx.lineWidth   = s.risk_score >= 0.70 ? 2 : 1.5
-      ctx.globalAlpha = 0.9
-      
-      if (s.risk_score >= 0.70) {
-        ctx.setLineDash([6, 6])
-        ctx.lineDashOffset = -timeRef.current * 0.4
-      } else {
+        const curvature = len * 0.15
+        const cx = midX + perpX * (curvature + offsetAmt)
+        const cy = midY + perpY * (curvature + offsetAmt)
+
+        let color = '#10b981'
+        let dash  = false
+        let label = ''
+
+        if (isSimulation && simVessel) {
+          if (simVessel.status === 'exposed') {
+            color = '#991b1b' // Deep red
+            dash  = true
+            label = 'EXPOSED'
+          } else {
+            color = '#3b82f6' // Blue for rerouted
+            label = 'REROUTED'
+          }
+        } else {
+          if (s.risk_score >= 0.70) { color = '#ef4444'; dash = true }
+          else if (s.risk_score >= 0.45) color = '#f59e0b'
+        }
+
+        ctx.beginPath()
+        ctx.moveTo(sox, soy)
+        ctx.quadraticCurveTo(cx, cy, sdx, sdy)
+
+        ctx.strokeStyle = color
+        ctx.lineWidth   = (simVessel || s.risk_score >= 0.70) ? 2.5 : 1.5
+        ctx.globalAlpha = 0.9
+
+        if (dash) {
+          ctx.setLineDash([6, 6])
+          ctx.lineDashOffset = -timeRef.current * 0.4
+        } else {
+          ctx.setLineDash([])
+        }
+        ctx.stroke()
+
+        // Draw label on route midpoint if simulation is active
+        if (isSimulation && simVessel && label) {
+          ctx.font = '8px font-bold sans-serif'
+          ctx.fillStyle = color
+          ctx.fillText(label, cx, cy)
+        }
+
         ctx.setLineDash([])
-      }
-      ctx.stroke()
-      ctx.setLineDash([])
-      ctx.globalAlpha = 1
+        ctx.globalAlpha = 1
 
       // --- AIS Vessel Tracking ---
       // seed t from departure_time so each vessel has a unique, realistic position
@@ -297,9 +322,21 @@ export default function WorldMap({ shipments }: Props) {
       ctx.rotate(angle)
       
       // Outer glow for at-risk vessels
-      if (s.risk_score >= 0.70 || isVesselHovered) {
-        ctx.shadowColor = color
+      if (s.risk_score >= 0.70 || isVesselHovered || (isSimulation && simVessel)) {
+        ctx.shadowColor = (isSimulation && simVessel) ? color : color
         ctx.shadowBlur  = isVesselHovered ? 12 : 6
+      }
+      
+      if (isSimulation && simVessel) {
+        // Additional pulsing ring for affected vessels in simulation
+        const pulse = (Math.sin(timeRef.current * 0.1) + 1) / 2
+        ctx.beginPath()
+        ctx.arc(0, 0, vesselSize * (2 + pulse), 0, Math.PI * 2)
+        ctx.strokeStyle = color
+        ctx.lineWidth = 1
+        ctx.globalAlpha = 0.4 * (1 - pulse)
+        ctx.stroke()
+        ctx.globalAlpha = 1
       }
       
       ctx.beginPath()
@@ -472,7 +509,7 @@ export default function WorldMap({ shipments }: Props) {
                 {tooltip.status.replace('_', ' ').toUpperCase()}
               </span>
             </div>
-            <div className="text-[10px] text-slate-400 mb-2">{tooltip.origin} → {tooltip.dest}</div>
+            <div className="text-[10px] text-slate-400 mb-2">{tooltip.origin} - {tooltip.dest}</div>
             <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px]">
               <span className="text-slate-400">Risk</span>
               <span className={`font-semibold ${
@@ -499,8 +536,8 @@ export default function WorldMap({ shipments }: Props) {
       <div className="absolute top-4 right-4 flex flex-col gap-2 z-20">
         {[
           { label: '+', action: () => { zoom.current = Math.min(zoom.current + 0.5, 6) } },
-          { label: '−', action: () => { zoom.current = Math.max(zoom.current - 0.5, 0.5) } },
-          { label: '⊙', action: () => { zoom.current = 1; pan.current = { x: 0, y: 0 } } },
+          { label: '-', action: () => { zoom.current = Math.max(zoom.current - 0.5, 0.5) } },
+          { label: 'O', action: () => { zoom.current = 1; pan.current = { x: 0, y: 0 } } },
         ].map(btn => (
           <button
             key={btn.label}

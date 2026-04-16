@@ -71,3 +71,31 @@ export interface PredictResponse {
   blocked_routes: { origin: string; destination: string; reason: string }[]
   constraint_snapshot: Record<string, string>
 }
+
+// -- War Room / Scenario Engine ------------------------------------------------
+export interface AffectedVessel {
+  shipment_id: string
+  origin: string
+  destination: string
+  current_route: string
+  recommended_route: string
+  delay_added_days: number
+  cost_impact_usd: number
+  co2_delta_tonnes: number
+  risk_score: number
+  status: 'reroutable' | 'exposed'
+}
+
+export interface SimulationResult {
+  scenario_name: string
+  affected_count: number
+  reroutable_count: number
+  exposed_count: number
+  unaffected_count: number
+  total_value_at_risk_usd: number
+  daily_loss_rate_usd: number
+  avg_delay_days: number
+  affected_vessels: AffectedVessel[]
+  exposed_vessels: AffectedVessel[]
+  gemini_brief: string
+}

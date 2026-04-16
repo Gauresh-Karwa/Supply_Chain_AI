@@ -3,13 +3,13 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const NAV = [
-  { href: '/overview',     label: 'Overview',           section: 'main'  },
-  { href: '/fleet',        label: 'Fleet tracker',      section: 'main'  },
+  { href: '/overview', label: 'Overview', section: 'main' },
+  { href: '/fleet', label: 'Fleet tracker', section: 'main' },
   { href: '/intelligence', label: 'Route intelligence', section: 'tools' },
-  { href: '/alerts',        label: 'Global alerts',      section: 'tools' },
-  { href: '/cost-analysis', label: 'Cost analysis',      section: 'tools' },
-  { href: '/port-traffic',  label: 'Port traffic',       section: 'tools' },
-  { href: '/inventory',     label: 'Inventory alerts',   section: 'tools' },
+  { href: '/alerts', label: 'Network Resilience Lab', section: 'tools' },
+  { href: '/cost-analysis', label: 'Cost analysis', section: 'tools' },
+  { href: '/port-traffic', label: 'Port traffic', section: 'tools' },
+  { href: '/inventory', label: 'Inventory alerts', section: 'tools' },
 ]
 
 export default function Sidebar() {
@@ -52,12 +52,20 @@ export default function Sidebar() {
           return (
             <Link key={item.href} href={item.href}>
               <div className={`flex items-center gap-2.5 px-2.5 py-2 rounded-md mb-0.5 cursor-pointer transition-colors
-                ${active ? 'bg-blue-50' : 'hover:bg-slate-50'}`}>
+                ${'special' in item && item.special
+                  ? active ? 'bg-red-50 border border-red-200' : 'hover:bg-red-50/50 border border-transparent hover:border-red-100'
+                  : active ? 'bg-blue-50' : 'hover:bg-slate-50'
+                }`}>
                 <div style={{
                   width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-                  background: active ? '#1d4ed8' : '#cbd5e1',
+                  background: 'special' in item && item.special
+                    ? (active ? '#dc2626' : '#fca5a5')
+                    : (active ? '#1d4ed8' : '#cbd5e1'),
                 }} />
-                <span className={`text-xs font-medium ${active ? 'text-blue-700' : 'text-slate-500'}`}>
+                <span className={`text-xs font-medium ${'special' in item && item.special
+                  ? (active ? 'text-red-700' : 'text-red-500')
+                  : (active ? 'text-blue-700' : 'text-slate-500')
+                  }`}>
                   {item.label}
                 </span>
               </div>
