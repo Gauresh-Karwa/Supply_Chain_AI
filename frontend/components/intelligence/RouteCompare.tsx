@@ -281,13 +281,45 @@ export default function RouteCompare() {
             </div>
           </div>
 
-          {/* Gemini analysis */}
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-            <div className="text-xs font-semibold text-blue-700 mb-2">Expert analysis</div>
-            <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
-              {stripMarkdown(result.gemini_comparison)}
-            </p>
-          </div>
+          {/* Gemini analysis structured */}
+          {result.gemini_comparison && (
+            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+              <div className="px-4 py-2.5 bg-blue-600 flex justify-between items-center">
+                <span className="text-xs font-semibold text-white">AI Strategy Assessment</span>
+                <span className="flex items-center gap-1">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                  </span>
+                  <span className="text-[10px] text-blue-100 font-medium uppercase tracking-wider">Live</span>
+                </span>
+              </div>
+              <div className="divide-y divide-slate-100">
+                <div className="px-4 py-2.5 flex gap-3">
+                  <span className="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Situation</span>
+                  <span className="text-xs text-slate-800 font-medium">{result.gemini_comparison.situation}</span>
+                </div>
+                <div className="px-4 py-2.5 flex gap-3">
+                  <span className="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Key risk shift</span>
+                  <span className="text-xs text-red-600 font-medium">{result.gemini_comparison.risk_driver}</span>
+                </div>
+                <div className="px-4 py-2.5 flex gap-3">
+                  <span className="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Recommendation</span>
+                  <span className="text-xs text-green-700 font-medium">{result.gemini_comparison.recommendation}</span>
+                </div>
+                <div className="px-4 py-2.5 flex gap-3 items-center">
+                  <span className="text-xs text-slate-400 w-28 flex-shrink-0">Confidence</span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider ${
+                    result.gemini_comparison.confidence === 'high' ? 'bg-green-100 text-green-700'
+                      : result.gemini_comparison.confidence === 'medium' ? 'bg-amber-100 text-amber-700'
+                        : 'bg-red-100 text-red-700'
+                  }`}>
+                    {result.gemini_comparison.confidence || 'medium'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
         </div>
       )}

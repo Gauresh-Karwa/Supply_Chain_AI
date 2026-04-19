@@ -1,11 +1,22 @@
 'use client'
-import { useState } from 'react'
+import { useState, Suspense, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import TopBar from '@/components/layout/TopBar'
 import RouteAssessor from '@/components/intelligence/RouteAssessor'
 import RouteCompare from '@/components/intelligence/RouteCompare'
 
 export default function IntelligencePage() {
-  const [tab, setTab] = useState<'assess' | 'compare'>('assess')
+  const searchParams = useSearchParams()
+  const [tab, setTab] = useState<'assess' | 'compare'>(
+    (searchParams.get('tab') as 'assess' | 'compare') ?? 'assess'
+  )
+
+  useEffect(() => {
+    const t = searchParams.get('tab')
+    if (t === 'assess' || t === 'compare') {
+      setTab(t)
+    }
+  }, [searchParams])
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -29,8 +40,10 @@ export default function IntelligencePage() {
         ))}
       </div>
       <div className="flex-1 overflow-y-auto">
-        {tab === 'assess'  && <RouteAssessor />}
-        {tab === 'compare' && <RouteCompare />}
+        <Suspense fallback={<div className="p-5 text-xs text-slate-500">Loading...</div>}>
+          {tab === 'assess'  && <RouteAssessor />}
+          {tab === 'compare' && <RouteCompare />}
+        </Suspense>
       </div>
     </div>
   )

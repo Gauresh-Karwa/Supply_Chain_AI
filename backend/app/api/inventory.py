@@ -31,10 +31,18 @@ class InventoryItemUpdate(BaseModel):
 
 @router.get("/items")
 async def list_items():
-    result = supabase.table("inventory_items").select("*").order(
-        "created_at", desc=True
-    ).execute()
-    return {"items": result.data}
+    try:
+        result = supabase.table("inventory_items").select("*").order(
+            "created_at", desc=True
+        ).execute()
+        if result.data:
+            return {"items": result.data}
+    except Exception as e:
+        print(f"[inventory] Fallback to demo ledger. DB error: {e}")
+        
+    # DB empty / RLS blocked — serve in-memory demo inventory
+    from app.core.demo_ledger import get_demo_inventory
+    return {"items": get_demo_inventory(), "_source": "demo"}
 
 
 @router.post("/items")

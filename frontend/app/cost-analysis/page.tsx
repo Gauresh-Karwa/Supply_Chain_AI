@@ -101,7 +101,7 @@ export default function CostAnalysisPage() {
 
   const [inputs, setInputs] = useState({
     analysisTitle:   'Shanghai Q3 Contingency',
-    companyName:     'DCL Electronics',
+    companyName:     'Demo Company',
     cargoValue:      '2500000',
     demurrageRate:   '15000',
     holdingRatePct:  '1',
@@ -132,6 +132,8 @@ export default function CostAnalysisPage() {
     })
     .finally(() => setLoading(false))
   }, [])
+
+
 
   const handleInput = (k: keyof typeof inputs, v: string) => {
     if (/^\d*\.?\d*$/.test(v)) setInputs(p => ({ ...p, [k]: v }))

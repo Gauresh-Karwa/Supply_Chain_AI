@@ -11,6 +11,9 @@ from app.api.port_congestion    import router as port_congestion_router
 from app.api.inventory          import router as inventory_router
 from app.api.scenarios          import router as scenarios_router
 from app.scheduler              import start_scheduler
+from app.core.demo_shipments    import init_demo_shipments
+from app.core.demo_ledger       import init_demo_ledger
+from app.api.esg import router as esg_router
 
 
 @asynccontextmanager
@@ -18,6 +21,8 @@ async def lifespan(app: FastAPI):
     # Runs at startup — models already loaded by loader.py imports
     print("[main] Supply Chain AI starting up")
     start_scheduler()
+    init_demo_shipments()
+    init_demo_ledger()
     yield
     print("[main] Shutting down")
 
@@ -51,7 +56,7 @@ app.include_router(cost_analysis_router)
 app.include_router(port_congestion_router)
 app.include_router(inventory_router)
 app.include_router(scenarios_router)
-
+app.include_router(esg_router)
 
 @app.get("/health")
 async def health():

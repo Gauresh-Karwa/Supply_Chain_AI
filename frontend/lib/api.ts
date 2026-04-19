@@ -9,6 +9,18 @@ export function stripMarkdown(text: string): string {
     .trim()
 }
 
+export function formatExposure(
+  riskScore: number,
+  delayDays: number,
+  dailyCost: number
+): string | null {
+  if (riskScore < 0.45 || delayDays <= 0 || !dailyCost) return null
+  const exposure = delayDays * dailyCost
+  if (exposure >= 1_000_000) return `$${(exposure / 1_000_000).toFixed(1)}M exposure`
+  if (exposure >= 1_000)     return `$${(exposure / 1_000).toFixed(0)}k exposure`
+  return `$${exposure.toFixed(0)} exposure`
+}
+
 export async function fetchShipments() {
   const res = await fetch(`${BASE}/shipments`)
   if (!res.ok) throw new Error('Failed to fetch shipments')
@@ -37,11 +49,17 @@ export async function fetchConstraints() {
 
 export async function updateConstraint(regionId: string, status: string) {
   const res = await fetch(`${BASE}/constraints/${regionId}`, {
-    method:  'PUT',
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ status }),
+    body: JSON.stringify({ status }),
   })
   if (!res.ok) throw new Error('Failed to update constraint')
+  return res.json()
+}
+
+export async function fetchESGDashboard() {
+  const res = await fetch(`${BASE}/esg`)
+  if (!res.ok) throw new Error('Failed to fetch ESG data')
   return res.json()
 }
 
@@ -51,9 +69,9 @@ export async function predictRoute(
   departureDate: string
 ) {
   const res = await fetch(`${BASE}/predict`, {
-    method:  'POST',
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({
+    body: JSON.stringify({
       origin,
       destination,
       departure_date: departureDate
@@ -71,13 +89,13 @@ export async function whatIfSimulation(
   alternateRouteId: string
 ) {
   const res = await fetch(`${BASE}/predict/whatif`, {
-    method:  'POST',
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({
+    body: JSON.stringify({
       origin,
       destination,
-      departure_date:     departureDate,
-      current_route_id:   currentRouteId,
+      departure_date: departureDate,
+      current_route_id: currentRouteId,
       alternate_route_id: alternateRouteId
     })
   })
@@ -92,13 +110,13 @@ export async function simulateScenario(
   save = false
 ) {
   const res = await fetch(`${BASE}/scenarios/simulate`, {
-    method:  'POST',
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({
-      blocked_regions:    blockedRegions,
+    body: JSON.stringify({
+      blocked_regions: blockedRegions,
       restricted_regions: restrictedRegions,
-      scenario_name:      scenarioName,
-      save_simulation:    save,
+      scenario_name: scenarioName,
+      save_simulation: save,
     }),
   })
   if (!res.ok) throw new Error('Scenario simulation failed')
@@ -110,9 +128,9 @@ export async function applyConstraintOverrides(
 ) {
   const updates = Object.entries(overrides).map(([regionId, status]) =>
     fetch(`${BASE}/constraints/${regionId}`, {
-      method:  'PUT',
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ status }),
+      body: JSON.stringify({ status }),
     })
   )
   await Promise.all(updates)

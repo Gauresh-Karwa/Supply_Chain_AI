@@ -47,3 +47,25 @@ async def create_shipment(body: ShipmentCreate):
     }
     result = supabase.table("shipments").insert(data).execute()
     return result.data[0]
+
+
+class ShipmentUpdate(BaseModel):
+    route_id:             Optional[str]   = None
+    status:               Optional[str]   = None
+    risk_score:           Optional[float] = None
+    predicted_delay_days: Optional[float] = None
+    anomaly_flag:         Optional[bool]  = None
+
+
+@router.patch("/{shipment_id}")
+async def update_shipment(shipment_id: str, body: ShipmentUpdate):
+    updates = {k: v for k, v in body.dict().items() if v is not None}
+    updates["updated_at"] = datetime.utcnow().isoformat()
+
+    result = supabase.table("shipments").update(updates).eq(
+        "id", shipment_id
+    ).execute()
+
+    if not result.data:
+        raise HTTPException(404, "Shipment not found")
+    return result.data[0]

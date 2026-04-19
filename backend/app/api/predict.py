@@ -176,7 +176,14 @@ async def whatif_simulation(req: WhatIfRequest):
         pass
 
     prompt = f"""You are a maritime logistics analyst comparing two shipping routes.
-Please provide bullet points as plain numbers (1., 2.) or short lines without using asterisk (*) characters.
+Respond in this EXACT JSON format with no other text:
+
+{{
+  "situation": "One sentence, 12 words max, stating the key comparison between routes",
+  "risk_driver": "The single most important factor driving the risk difference, 10 words max",
+  "recommendation": "One specific action starting with a verb, 12 words max",
+  "confidence": "high or medium or low based on data quality"
+}}
 
 Current route: {current_route['origin']} → {current_route['destination']}
   via: {' → '.join(current_route.get('waypoints', []))}
@@ -195,31 +202,29 @@ Delay change: {'reduces by' if delay_delta < 0 else 'increases by'} {abs(delay_d
 CO2 change: {'reduces by' if co2_delta < 0 else 'increases by'} {abs(co2_delta)} tCO₂
 {intel_text}
 
-Provide a cohesive intelligence summary explaining what switching routes means. 
-Focus on the geopolitical constraints, the delay shift, and the CO2 impact.
-Give a clear recommendation."""
+Return only valid JSON. No markdown."""
 
     try:
+        from app.core.config import GEMINI_API_KEY
+        import json
         client     = genai.Client(api_key=GEMINI_API_KEY)
         response   = client.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt
         )
-        comparison = response.text.strip()
+        raw = response.text.strip().replace('```json', '').replace('```', '').strip()
+        comparison = json.loads(raw)
     except Exception:
-        
         # Native intelligence fallback
         dir_risk = "reduces" if risk_delta < 0 else "increases"
         dir_delay = "reduces" if delay_delta < 0 else "increases"
-        dir_co2 = "reduces" if co2_delta < 0 else "increases"
         
-        comparison = (
-            f"STRATEGIC ROUTE ANALYSIS:\n"
-            f"Executing a diversion to the alternate route via {', '.join(alternate_route.get('waypoints', ['this corridor']))} {dir_risk} total delay risk by {abs(risk_delta):.0%} "
-            f"and specifically {dir_delay} estimated days-lost by {abs(delay_delta):.1f} days.\n\n"
-            f"CO₂ Environmental Impact: This diversion {dir_co2} the vessel's carbon footprint by {abs(co2_delta)} tCO₂.{intel_text}\n\n"
-            f"RECOMMENDATION: {'Execute' if risk_delta < 0 else 'Decline'} strategic diversion order based on current chokepoint telemetry."
-        )
+        comparison = {
+            "situation": f"Diversion {dir_risk} risk by {abs(risk_delta):.0%}",
+            "risk_driver": "Geopolitical chokepoint exposure",
+            "recommendation": f"{'Execute' if risk_delta < 0 else 'Decline'} strategic diversion order",
+            "confidence": "high"
+        }
 
     return {
         "current_route": {

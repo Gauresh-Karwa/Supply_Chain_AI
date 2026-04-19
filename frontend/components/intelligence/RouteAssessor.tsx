@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { predictRoute, fetchRoutes, stripMarkdown } from '@/lib/api'
+import { useSearchParams } from 'next/navigation'
+import { predictRoute, fetchRoutes, stripMarkdown, formatExposure } from '@/lib/api'
 import { PredictResponse, Route } from '@/types'
 import RiskGauge from './RiskGauge'
 import ShapChart from './ShapChart'
@@ -40,18 +41,37 @@ function routeLabel(waypoints: string[]): string {
 }
 
 export default function RouteAssessor() {
+  const searchParams = useSearchParams()
+  const initOrigin = searchParams.get('origin') || ''
+  const initDest = searchParams.get('destination') || ''
+
   const [allRoutes,  setAllRoutes]  = useState<Route[]>([])
-  const [origin,     setOrigin]     = useState('')
-  const [dest,       setDest]       = useState('')
-  const [date,       setDate]       = useState('')
+  const [origin,     setOrigin]     = useState(initOrigin)
+  const [dest,       setDest]       = useState(initDest)
+  const [date,       setDate]       = useState(() => new Date().toISOString().split('T')[0])
   const [loading,    setLoading]    = useState(false)
   const [result,     setResult]     = useState<PredictResponse | null>(null)
   const [error,      setError]      = useState('')
+
+  useEffect(() => {
+    const o = searchParams.get('origin')
+    const d = searchParams.get('destination')
+    if (o) setOrigin(o)
+    if (d) setDest(d)
+  }, [searchParams])
 
   // Load all routes once on mount
   useEffect(() => {
     fetchRoutes().then(d => setAllRoutes(d.routes || []))
   }, [])
+
+  // Auto-trigger assessment if URL params are present
+  useEffect(() => {
+    if (initOrigin && initDest) {
+      handleAssess()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initOrigin, initDest])
 
   // All unique origins
   const origins = [...new Set(allRoutes.map(r => r.origin))].sort()
@@ -175,41 +195,82 @@ export default function RouteAssessor() {
               )}
             </div>
 
-            <div className="col-span-2 bg-blue-50 border border-blue-100 rounded-xl p-4">
-              <div className="text-xs font-semibold text-blue-700 mb-2">Analysis summary</div>
-              <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
-                {stripMarkdown(result.explanation.gemini_explanation)}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {result.explanation.risk_drivers.slice(0, 3).map((d, i) => (
-                  <span key={i} className={`text-xs px-2.5 py-1 rounded-full border font-medium ${
-                    d.direction === 'increases_risk'
-                      ? 'bg-red-50 text-red-600 border-red-200'
-                      : 'bg-green-50 text-green-600 border-green-200'
-                  }`}>
-                    {d.direction === 'increases_risk' ? '↑' : '↓'} {d.factor}
-                  </span>
-                ))}
-              </div>
+            <div className={`col-span-2 ${result.explanation.structured ? '' : 'bg-blue-50 border border-blue-100 rounded-xl p-4'}`}>
+              {result.explanation.structured ? (
+                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm h-full">
+                  <div className="px-4 py-2 bg-blue-600 flex justify-between items-center">
+                    <span className="text-xs font-semibold text-white">AI Risk Assessment</span>
+                    <span className="flex items-center gap-1">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                      </span>
+                      <span className="text-[10px] text-blue-100 font-medium uppercase tracking-wider">Live</span>
+                    </span>
+                  </div>
+                  <div className="divide-y divide-slate-100">
+                    <div className="px-4 py-2 flex gap-3">
+                      <span className="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Situation</span>
+                      <span className="text-xs text-slate-800 font-medium">{result.explanation.structured.situation}</span>
+                    </div>
+                    <div className="px-4 py-2 flex gap-3">
+                      <span className="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Key risk factor</span>
+                      <span className="text-xs text-red-600 font-medium">{result.explanation.structured.risk_driver}</span>
+                    </div>
+                    <div className="px-4 py-2 flex gap-3">
+                      <span className="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Recommendation</span>
+                      <span className="text-xs text-green-700 font-medium">{result.explanation.structured.recommendation}</span>
+                    </div>
+                    <div className="px-4 py-2 flex gap-3 items-center">
+                      <span className="text-xs text-slate-400 w-28 flex-shrink-0">Confidence</span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider ${
+                        result.explanation.structured.confidence === 'high' ? 'bg-green-100 text-green-700'
+                          : result.explanation.structured.confidence === 'medium' ? 'bg-amber-100 text-amber-700'
+                            : 'bg-red-100 text-red-700'
+                      }`}>
+                        {result.explanation.structured.confidence}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="text-xs font-semibold text-blue-700 mb-2">Analysis summary</div>
+                  <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
+                    {stripMarkdown(result.explanation.gemini_explanation)}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {result.explanation.risk_drivers.slice(0, 3).map((d, i) => (
+                      <span key={i} className={`text-xs px-2.5 py-1 rounded-full border font-medium ${
+                        d.direction === 'increases_risk'
+                          ? 'bg-red-50 text-red-600 border-red-200'
+                          : 'bg-green-50 text-green-600 border-green-200'
+                      }`}>
+                        {d.direction === 'increases_risk' ? '↑' : '↓'} {d.factor}
+                      </span>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
           <div className="bg-white border-2 border-blue-300 rounded-xl p-4">
-            <div className="flex justify-between items-start mb-2">
-              <div>
-                <span className="text-xs bg-blue-600 text-white px-2.5 py-1 rounded-full font-semibold">
-                  Recommended
-                </span>
-                <div className="text-sm font-bold text-slate-800 mt-2">
-                  {routeLabel(result.recommendation.waypoints)}
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-xs text-slate-400">Score</div>
-                <div className="text-sm font-bold text-slate-700">
-                  {result.recommendation.composite_score.toFixed(3)}
-                </div>
-              </div>
+            <div style={{ marginBottom: 8 }}>
+              <span style={{
+                fontSize: 10, background: '#1d4ed8', color: 'white',
+                padding: '2px 10px', borderRadius: 99, fontWeight: 700,
+              }}>
+                Recommended — optimised route
+              </span>
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>
+              {routeLabel(result.recommendation.waypoints)}
+            </div>
+            <div style={{ fontSize: 10, color: '#64748b', marginBottom: 8 }}>
+              Multi-objective score: {result.recommendation.composite_score.toFixed(3)} — evaluated across{' '}
+              {(result.alternatives?.length ?? 0) + 1 + (result.blocked_routes?.length ?? 0)} routes ·
+              criteria: risk (35%) · reliability (25%) · carbon (20%) · cost (10%) · speed (10%)
             </div>
             <div className="flex gap-4 text-xs text-slate-500 flex-wrap items-center mt-3">
               <span>{result.recommendation.distance_km.toLocaleString()} km</span>
@@ -237,6 +298,18 @@ export default function RouteAssessor() {
                 </span>
               )}
             </div>
+            {(() => {
+              const exp = formatExposure(result.prediction.risk_score, result.prediction.delay_days, 18000)
+              return exp ? (
+                <div style={{
+                  marginTop: 8, fontSize: 11, fontWeight: 600, color: '#dc2626',
+                  padding: '4px 10px', background: '#fef2f2', border: '1px solid #fecaca',
+                  borderRadius: 6, display: 'inline-block'
+                }}>
+                  {exp} at current delay estimate
+                </div>
+              ) : null
+            })()}
           </div>
 
           {result.alternatives.length > 0 && (

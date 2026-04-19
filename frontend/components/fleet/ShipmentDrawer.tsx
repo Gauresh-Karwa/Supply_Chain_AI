@@ -1,18 +1,18 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { Shipment, PredictResponse } from '@/types'
-import { predictRoute, stripMarkdown } from '@/lib/api'
+import { predictRoute, stripMarkdown, formatExposure } from '@/lib/api'
 import ShapChart from '@/components/intelligence/ShapChart'
 
 interface Props {
   shipment: Shipment
-  onClose:  () => void
+  onClose: () => void
 }
 
 export default function ShipmentDrawer({ shipment, onClose }: Props) {
-  const [data,    setData]    = useState<PredictResponse | null>(null)
+  const [data, setData] = useState<PredictResponse | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState('')
+  const [error, setError] = useState('')
 
   useEffect(() => {
     const date = new Date(shipment.departure_time).toISOString().split('T')[0]
@@ -27,10 +27,10 @@ export default function ShipmentDrawer({ shipment, onClose }: Props) {
 
   function routeLabel(waypoints: string[]): string {
     const keyMap: Record<string, string> = {
-      'Suez_Canal':        'Suez Canal',
+      'Suez_Canal': 'Suez Canal',
       'Cape_of_Good_Hope': 'Cape of Good Hope',
-      'Hormuz_Strait':     'Strait of Hormuz',
-      'Malacca_Strait':    'Strait of Malacca',
+      'Hormuz_Strait': 'Strait of Hormuz',
+      'Malacca_Strait': 'Strait of Malacca',
     }
     const key = waypoints.find(w => keyMap[w])
     return key
@@ -82,32 +82,86 @@ export default function ShipmentDrawer({ shipment, onClose }: Props) {
             {/* Risk score */}
             <div className="bg-slate-50 rounded-xl p-4 text-center">
               <div className="text-xs text-slate-400 mb-1">Disruption risk</div>
-              <div className={`text-4xl font-bold ${
-                data.prediction.risk_score >= 0.70 ? 'text-red-600'
-                : data.prediction.risk_score >= 0.45 ? 'text-amber-600'
-                : 'text-green-600'
-              }`}>
+              <div className={`text-4xl font-bold ${data.prediction.risk_score >= 0.70 ? 'text-red-600'
+                  : data.prediction.risk_score >= 0.45 ? 'text-amber-600'
+                    : 'text-green-600'
+                }`}>
                 {Math.round(data.prediction.risk_score * 100)}%
               </div>
               <div className="text-xs text-slate-400 mt-1">
                 {data.prediction.risk_score >= 0.70 ? 'Needs attention'
-                 : data.prediction.risk_score >= 0.45 ? 'Under watch'
-                 : 'On schedule'}
+                  : data.prediction.risk_score >= 0.45 ? 'Under watch'
+                    : 'On schedule'}
               </div>
               {data.prediction.delay_days > 0 && (
                 <div className="text-xs text-slate-500 mt-2 bg-white rounded-lg px-3 py-1.5 border border-slate-200 inline-block">
                   Estimated delay if disrupted: <strong>{data.prediction.delay_days.toFixed(1)} days</strong>
                 </div>
               )}
+              {(() => {
+                const exp = formatExposure(
+                  data.prediction.risk_score,
+                  data.prediction.delay_days,
+                  shipment.daily_delay_cost_usd ?? 18000
+                )
+                return exp ? (
+                  <div style={{
+                    marginTop: 8, padding: '6px 12px',
+                    background: '#fef2f2', border: '1px solid #fecaca',
+                    borderRadius: 8, fontSize: 12, fontWeight: 700, color: '#dc2626',
+                    textAlign: 'center'
+                  }}>
+                    {exp}
+                  </div>
+                ) : null
+              })()}
             </div>
 
-            {/* Gemini explanation */}
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-              <div className="text-xs font-semibold text-blue-700 mb-2">What this means</div>
-              <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
-                {stripMarkdown(data.explanation.gemini_explanation)}
-              </p>
-            </div>
+            {/* Structured AI insight — replaces prose paragraph */}
+            {data.explanation.structured ? (
+              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                <div className="px-4 py-2.5 bg-blue-600 flex justify-between items-center">
+                  <span className="text-xs font-semibold text-white">AI Risk Assessment</span>
+                  <span className="flex items-center gap-1">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                    </span>
+                    <span className="text-[10px] text-blue-100 font-medium uppercase tracking-wider">Live</span>
+                  </span>
+                </div>
+                <div className="divide-y divide-slate-100">
+                  <div className="px-4 py-2.5 flex gap-3">
+                    <span className="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Situation</span>
+                    <span className="text-xs text-slate-800 font-medium">{data.explanation.structured.situation}</span>
+                  </div>
+                  <div className="px-4 py-2.5 flex gap-3">
+                    <span className="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Key risk factor</span>
+                    <span className="text-xs text-red-600 font-medium">{data.explanation.structured.risk_driver}</span>
+                  </div>
+                  <div className="px-4 py-2.5 flex gap-3">
+                    <span className="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Recommendation</span>
+                    <span className="text-xs text-green-700 font-medium">{data.explanation.structured.recommendation}</span>
+                  </div>
+                  <div className="px-4 py-2.5 flex gap-3 items-center">
+                    <span className="text-xs text-slate-400 w-28 flex-shrink-0">Confidence</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider ${data.explanation.structured.confidence === 'high' ? 'bg-green-100 text-green-700'
+                      : data.explanation.structured.confidence === 'medium' ? 'bg-amber-100 text-amber-700'
+                        : 'bg-red-100 text-red-700'
+                      }`}>
+                      {data.explanation.structured.confidence}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                <div className="text-xs font-semibold text-blue-700 mb-2">What this means</div>
+                <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
+                  {stripMarkdown(data.explanation.gemini_explanation)}
+                </p>
+              </div>
+            )}
 
             {/* SHAP chart */}
             <div className="bg-white border border-slate-200 rounded-xl p-4">
@@ -128,15 +182,14 @@ export default function ShipmentDrawer({ shipment, onClose }: Props) {
                 <span>{Math.round(data.recommendation.base_time_hrs / 24)} days transit</span>
                 <span>{Math.round(data.recommendation.reliability_score * 100)}% reliability</span>
                 {data.prediction.weather && (
-                  <div className={`flex items-center gap-1 font-semibold px-2 py-0.5 rounded-full border w-fit mt-1 ${
-                    data.prediction.weather.origin_score > 2.5 
-                      ? 'bg-amber-50 text-amber-700 border-amber-200' 
+                  <div className={`flex items-center gap-1 font-semibold px-2 py-0.5 rounded-full border w-fit mt-1 ${data.prediction.weather.origin_score > 2.5
+                      ? 'bg-amber-50 text-amber-700 border-amber-200'
                       : 'bg-blue-50 text-blue-700 border-blue-200'
-                  }`}>
+                    }`}>
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
                     {data.prediction.weather.is_forecast ? 'Live Forecast' : 'Historical'}: {
-                      data.prediction.weather.origin_score >= 1.0 ? 'Severe' : 
-                      data.prediction.weather.origin_score >= 0.3 ? 'Moderate' : 'Clear'
+                      data.prediction.weather.origin_score >= 1.0 ? 'Severe' :
+                        data.prediction.weather.origin_score >= 0.3 ? 'Moderate' : 'Clear'
                     }
                   </div>
                 )}

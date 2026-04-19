@@ -1,40 +1,37 @@
 'use client'
 import { useState, useCallback, useEffect } from 'react'
-import { SimulationResult, AffectedVessel, Shipment } from '@/types'
-import { simulateScenario, applyConstraintOverrides, fetchShipments } from '@/lib/api'
+import { SimulationResult, AffectedVessel, Shipment, CascadePort } from '@/types'
+import { simulateScenario, applyConstraintOverrides, fetchShipments, predictRoute } from '@/lib/api'
 import ShipmentDrawer from '@/components/fleet/ShipmentDrawer'
 import WorldMap from '@/components/overview/WorldMap'
 import AnalysisModal from '@/components/alerts/AnalysisModal'
 
-// -- Region catalogue -----------------------------------------------------------
 const ALL_REGIONS = [
-  { id: 'suez_canal',        name: 'Suez Canal' },
-  { id: 'bab_el_mandeb',     name: 'Bab-el-Mandeb' },
-  { id: 'hormuz_strait',     name: 'Strait of Hormuz' },
-  { id: 'malacca_strait',    name: 'Strait of Malacca' },
-  { id: 'taiwan_strait',     name: 'Taiwan Strait' },
-  { id: 'south_china_sea',   name: 'South China Sea' },
-  { id: 'east_china_sea',    name: 'East China Sea' },
-  { id: 'panama_canal',      name: 'Panama Canal' },
-  { id: 'english_channel',   name: 'English Channel' },
-  { id: 'bosphorus_strait',  name: 'Bosphorus Strait' },
+  { id: 'suez_canal', name: 'Suez Canal' },
+  { id: 'bab_el_mandeb', name: 'Bab-el-Mandeb' },
+  { id: 'hormuz_strait', name: 'Strait of Hormuz' },
+  { id: 'malacca_strait', name: 'Strait of Malacca' },
+  { id: 'taiwan_strait', name: 'Taiwan Strait' },
+  { id: 'south_china_sea', name: 'South China Sea' },
+  { id: 'east_china_sea', name: 'East China Sea' },
+  { id: 'panama_canal', name: 'Panama Canal' },
+  { id: 'english_channel', name: 'English Channel' },
+  { id: 'bosphorus_strait', name: 'Bosphorus Strait' },
   { id: 'cape_of_good_hope', name: 'Cape of Good Hope' },
-  { id: 'arabian_sea',       name: 'Arabian Sea' },
-  { id: 'bay_of_bengal',     name: 'Bay of Bengal' },
-  { id: 'north_sea',         name: 'North Sea' },
-  { id: 'north_atlantic',    name: 'North Atlantic' },
-  { id: 'new_york_port',     name: 'New York Port' },
+  { id: 'arabian_sea', name: 'Arabian Sea' },
+  { id: 'bay_of_bengal', name: 'Bay of Bengal' },
+  { id: 'north_sea', name: 'North Sea' },
+  { id: 'north_atlantic', name: 'North Atlantic' },
+  { id: 'new_york_port', name: 'New York Port' },
 ]
 
-// -- Pre-built Black Swan scenarios ---------------------------------------------
 interface ScenarioDef {
-  id:       string
-  name:     string
-  short:    string
+  id: string
+  name: string
+  short: string
   category: 'geopolitical' | 'environmental'
-  blocked:  string[]
+  blocked: string[]
   restricted: string[]
-  icon: string
 }
 
 const SCENARIOS: ScenarioDef[] = [
@@ -45,7 +42,6 @@ const SCENARIOS: ScenarioDef[] = [
     category: 'geopolitical',
     blocked: ['bab_el_mandeb', 'suez_canal'],
     restricted: [],
-    icon: 'BLOCK',
   },
   {
     id: 'hormuz_blockade',
@@ -54,7 +50,6 @@ const SCENARIOS: ScenarioDef[] = [
     category: 'geopolitical',
     blocked: ['hormuz_strait'],
     restricted: ['arabian_sea'],
-    icon: 'OIL',
   },
   {
     id: 'taiwan_strait_closure',
@@ -63,7 +58,6 @@ const SCENARIOS: ScenarioDef[] = [
     category: 'geopolitical',
     blocked: ['taiwan_strait', 'south_china_sea'],
     restricted: ['east_china_sea'],
-    icon: 'WAR',
   },
   {
     id: 'suez_mechanical',
@@ -72,43 +66,38 @@ const SCENARIOS: ScenarioDef[] = [
     category: 'geopolitical',
     blocked: ['suez_canal'],
     restricted: [],
-    icon: 'ANCHOR',
   },
   {
     id: 'panama_drought',
     name: 'Panama Canal drought restriction',
-    short: 'Restricts Panama Canal — 60% capacity loss',
+    short: 'Restricts Panama — 60% capacity loss',
     category: 'geopolitical',
     blocked: [],
     restricted: ['panama_canal'],
-    icon: 'ALERT',
   },
   {
     id: 'us_east_strike',
     name: 'US East Coast port strike',
-    short: 'Restricts New York + other US East ports',
+    short: 'Restricts New York + US East ports',
     category: 'geopolitical',
     blocked: [],
     restricted: ['new_york_port'],
-    icon: 'ALERT',
   },
   {
     id: 'south_china_escalation',
-    name: 'South China Sea territorial escalation',
+    name: 'South China Sea escalation',
     short: 'Blocks South China Sea shipping lanes',
     category: 'geopolitical',
     blocked: ['south_china_sea'],
     restricted: ['east_china_sea'],
-    icon: 'SHIP',
   },
   {
     id: 'typhoon_pacific',
     name: 'Category 5 Typhoon — Western Pacific',
-    short: 'Blocks Taiwan Strait + South China Sea + East China Sea',
+    short: 'Blocks Taiwan Strait + South + East China Sea',
     category: 'environmental',
     blocked: ['taiwan_strait', 'south_china_sea', 'east_china_sea'],
     restricted: [],
-    icon: 'STORM',
   },
   {
     id: 'indian_ocean_cyclone',
@@ -117,144 +106,140 @@ const SCENARIOS: ScenarioDef[] = [
     category: 'environmental',
     blocked: [],
     restricted: ['arabian_sea', 'bay_of_bengal'],
-    icon: 'STORM',
   },
   {
     id: 'north_atlantic_storms',
     name: 'North Atlantic winter storms',
-    short: 'Restricts North Sea + North Atlantic routes',
+    short: 'Restricts North Sea + North Atlantic',
     category: 'environmental',
     blocked: [],
     restricted: ['north_sea', 'north_atlantic'],
-    icon: '🌨️',
   },
   {
     id: 'suez_sandstorm',
-    name: 'Suez sandstorm + visibility closure',
-    short: 'Blocks Suez 48-72 hours',
+    name: 'Suez sandstorm closure',
+    short: 'Blocks Suez 48–72 hours',
     category: 'environmental',
     blocked: ['suez_canal'],
     restricted: [],
-    icon: 'ALERT',
   },
 ]
 
-// -- Helpers --------------------------------------------------------------------
-function fmt(n: number, decimals = 1) {
+function fmt(n: number) {
   if (n >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(1)}B`
-  if (n >= 1_000_000)     return `$${(n / 1_000_000).toFixed(1)}M`
-  if (n >= 1_000)         return `$${(n / 1_000).toFixed(0)}k`
-  return `$${n.toFixed(decimals)}`
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(0)}k`
+  return `$${n.toFixed(0)}`
 }
 
-function fmtDelay(d: number) {
-  return d === 0 ? '-' : `+${d.toFixed(1)} days`
-}
-
-// -- Sub-components -------------------------------------------------------------
-function MetricCard({
-  label, value, sub, color,
-}: { label: string; value: string; sub?: string; color: 'red' | 'amber' | 'blue' | 'slate' }) {
-  const colors = {
-    red:   'border-red-200   bg-red-50   text-red-600',
-    amber: 'border-amber-200 bg-amber-50 text-amber-600',
-    blue:  'border-blue-200  bg-blue-50  text-blue-600',
-    slate: 'border-slate-300 bg-slate-50 text-slate-700',
-  }
+function PulseDot({ color }: { color: 'red' | 'green' | 'amber' }) {
+  const c = { red: '#ef4444', green: '#22c55e', amber: '#f59e0b' }[color]
   return (
-    <div className={`rounded-xl border p-4 ${colors[color]}`}>
-      <div className="text-xs text-slate-400 mb-1">{label}</div>
-      <div className={`text-xl font-bold ${colors[color].split(' ')[2]}`}>{value}</div>
-      {sub && <div className="text-xs text-slate-400 mt-1">{sub}</div>}
-    </div>
-  )
-}
-
-function PulseRing({ color }: { color: 'red' | 'amber' | 'green' }) {
-  const c = { red: 'bg-red-500', amber: 'bg-amber-500', green: 'bg-green-500' }[color]
-  const r = { red: 'bg-red-500/20', amber: 'bg-amber-500/20', green: 'bg-green-500/20' }[color]
-  return (
-    <span className="relative inline-flex h-2.5 w-2.5 mr-2">
-      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${r} opacity-75`} />
-      <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${c}`} />
+    <span style={{ position: 'relative', display: 'inline-flex', width: 10, height: 10, marginRight: 8 }}>
+      <span style={{
+        position: 'absolute', inset: 0, borderRadius: '50%',
+        background: c, opacity: 0.3, animation: 'ping 1.5s ease-in-out infinite',
+      }} />
+      <span style={{ position: 'relative', width: 10, height: 10, borderRadius: '50%', background: c }} />
     </span>
   )
 }
 
-// == MAIN PAGE =================================================================
-export default function RealSimulationPage() {
-  /* -- state -- */
-  const [activeScenarioIds, setActiveScenarioIds] = useState<Set<string>>(new Set())
-  const [customOpen, setCustomOpen]           = useState(false)
-  const [customRegions, setCustomRegions]     = useState<Record<string, 'open' | 'restricted' | 'blocked'>>({})
-  const [isSimulating, setIsSimulating]       = useState(false)
-  const [simulationResult, setSimulationResult] = useState<SimulationResult | null>(null)
-  const [geminiLoading, setGeminiLoading]     = useState(false)
-  const [briefGenerated, setBriefGenerated]   = useState(false)
-  const [briefTimestamp, setBriefTimestamp]   = useState<Date | null>(null)
-  const [briefText, setBriefText]             = useState('')
-  const [briefCopied, setBriefCopied]         = useState(false)
-  const [isModalOpen, setIsModalOpen]         = useState(false)
-  const [shipments, setShipments]           = useState<Shipment[]>([])
-  const [drawerShipment, setDrawerShipment]   = useState<Shipment | null>(null)
-  const [applyingLive, setApplyingLive]       = useState(false)
-  const [liveApplied, setLiveApplied]         = useState(false)
-  const [error, setError]                     = useState('')
+function MetricCard({ label, value, sub, color }: {
+  label: string; value: string; sub?: string
+  color: 'red' | 'amber' | 'blue' | 'slate'
+}) {
+  const styles = {
+    red: { border: '#fecaca', bg: '#fef2f2', text: '#dc2626' },
+    amber: { border: '#fde68a', bg: '#fffbeb', text: '#d97706' },
+    blue: { border: '#bfdbfe', bg: '#eff6ff', text: '#1d4ed8' },
+    slate: { border: '#e2e8f0', bg: '#f8fafc', text: '#475569' },
+  }[color]
+  return (
+    <div style={{ border: `1px solid ${styles.border}`, background: styles.bg, borderRadius: 10, padding: '12px 14px' }}>
+      <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+      <div style={{ fontSize: 18, fontWeight: 700, color: styles.text }}>{value}</div>
+      {sub && <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 3 }}>{sub}</div>}
+    </div>
+  )
+}
 
-  /* -- initial load -- */
+export default function WarRoomPage() {
+  const [activeScenarioIds, setActiveScenarioIds] = useState<Set<string>>(new Set())
+  const [customOpen, setCustomOpen] = useState(false)
+  const [customRegions, setCustomRegions] = useState<Record<string, 'open' | 'restricted' | 'blocked'>>({})
+  const [isSimulating, setIsSimulating] = useState(false)
+  const [simulationResult, setSimulationResult] = useState<SimulationResult | null>(null)
+  const [geminiLoading, setGeminiLoading] = useState(false)
+  const [briefGenerated, setBriefGenerated] = useState(false)
+  const [briefText, setBriefText] = useState('')
+  const [briefCopied, setBriefCopied] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [shipments, setShipments] = useState<Shipment[]>([])
+  const [drawerShipment, setDrawerShipment] = useState<Shipment | null>(null)
+  const [applyingLive, setApplyingLive] = useState(false)
+  const [liveApplied, setLiveApplied] = useState(false)
+  const [reroutingIds, setReroutingIds] = useState<Set<string>>(new Set())
+  const [reroutedIds,  setReroutedIds]  = useState<Set<string>>(new Set())
+  const [error, setError] = useState('')
+
+  async function autoReroute(v: AffectedVessel) {
+    setReroutingIds(prev => new Set([...prev, v.shipment_id]))
+    try {
+      const date   = new Date().toISOString().split('T')[0]
+      const result = await predictRoute(v.origin, v.destination, date)
+
+      if (result.recommendation?.route_id) {
+        // Persist to Supabase — this closes the demo loop
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/shipments/${v.shipment_id}`, {
+          method:  'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            route_id:             result.recommendation.route_id,
+            status:               'on_time',
+            risk_score:           result.prediction.risk_score,
+            predicted_delay_days: result.prediction.delay_days,
+          }),
+        })
+        setReroutedIds(prev => new Set([...prev, v.shipment_id]))
+      }
+    } catch {
+      setError(`Failed to reroute ${v.origin} → ${v.destination}`)
+    } finally {
+      setReroutingIds(prev => {
+        const n = new Set(prev); n.delete(v.shipment_id); return n
+      })
+    }
+  }
+
   useEffect(() => {
-    fetchShipments().then(res => setShipments(res.shipments || [])).catch(() => setError('Failed to load fleet data'))
+    fetchShipments()
+      .then(res => setShipments(res.shipments || []))
+      .catch(() => setError('Failed to load fleet data'))
   }, [])
 
-  /* -- derived active scenario merge -- */
   const mergedScenario = useCallback(() => {
-    const blocked: string[]    = []
+    const blocked: string[] = []
     const restricted: string[] = []
-
     for (const sid of activeScenarioIds) {
       const s = SCENARIOS.find(sc => sc.id === sid)
-      if (s) {
-        blocked.push(...s.blocked)
-        restricted.push(...s.restricted)
-      }
+      if (s) { blocked.push(...s.blocked); restricted.push(...s.restricted) }
     }
-
-    // Custom overrides
     for (const [id, st] of Object.entries(customRegions)) {
-      if (st === 'blocked')     blocked.push(id)
+      if (st === 'blocked') blocked.push(id)
       else if (st === 'restricted') restricted.push(id)
     }
-
     const name = activeScenarioIds.size === 0
-      ? customOpen ? 'Custom Scenario' : ''
+      ? customOpen ? 'Custom scenario' : ''
       : activeScenarioIds.size === 1
         ? SCENARIOS.find(s => s.id === [...activeScenarioIds][0])?.name ?? 'Scenario'
         : `Compound crisis (${activeScenarioIds.size} events)`
-
-    return {
-      blocked:    [...new Set(blocked)],
-      restricted: [...new Set(restricted)],
-      name,
-    }
+    return { blocked: [...new Set(blocked)], restricted: [...new Set(restricted)], name }
   }, [activeScenarioIds, customRegions, customOpen])
 
-  const affectedRegionCount = useCallback(() => {
-    const m = mergedScenario()
-    return new Set([...m.blocked, ...m.restricted]).size
-  }, [mergedScenario])
-
-  /* -- run simulation -- */
-  const runSimulation = useCallback(async (
-    blocked: string[], restricted: string[], name: string
-  ) => {
-    if (!blocked.length && !restricted.length) {
-      setSimulationResult(null)
-      return
-    }
-    setIsSimulating(true)
-    setError('')
-    setBriefGenerated(false)
-    setBriefText('')
+  const runSimulation = useCallback(async (blocked: string[], restricted: string[], name: string) => {
+    if (!blocked.length && !restricted.length) { setSimulationResult(null); return }
+    setIsSimulating(true); setError(''); setBriefGenerated(false); setBriefText('')
     try {
       const result = await simulateScenario(blocked, restricted, name)
       setSimulationResult(result)
@@ -265,178 +250,164 @@ export default function RealSimulationPage() {
     }
   }, [])
 
-  /* -- auto-run whenever active scenarios or custom regions change -- */
   useEffect(() => {
     const { blocked, restricted, name } = mergedScenario()
     runSimulation(blocked, restricted, name)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeScenarioIds, customRegions])
 
-  /* -- toggle a pre-built scenario -- */
   const toggleScenario = useCallback((id: string) => {
     setActiveScenarioIds(prev => {
       const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
+      if (next.has(id)) { next.delete(id) } else { next.add(id) }
       return next
     })
   }, [])
 
-  /* -- generate Gemini brief -- */
   const generateBrief = useCallback(async () => {
     if (!simulationResult) return
-    setIsModalOpen(true)
-    setGeminiLoading(true)
-    // Brief was already generated server-side; show it with typewriter if present
+    setIsModalOpen(true); setGeminiLoading(true)
     const brief = simulationResult.gemini_brief
-    setBriefText('')
-    setBriefGenerated(true)
-    setBriefTimestamp(new Date())
-
-    // Typewriter animation
+    setBriefText(''); setBriefGenerated(true); setBriefText('')
     let i = 0
     const interval = setInterval(() => {
-      setBriefText(brief.slice(0, i))
-      i += 6
-      if (i > brief.length) {
-        setBriefText(brief)
-        clearInterval(interval)
-        setGeminiLoading(false)
-      }
+      setBriefText(brief.slice(0, i)); i += 6
+      if (i > brief.length) { setBriefText(brief); clearInterval(interval); setGeminiLoading(false) }
     }, 16)
   }, [simulationResult])
 
-  /* -- copy brief -- */
   const copyBrief = useCallback(async () => {
     if (!briefText) return
     await navigator.clipboard.writeText(briefText)
-    setBriefCopied(true)
-    setTimeout(() => setBriefCopied(false), 2000)
+    setBriefCopied(true); setTimeout(() => setBriefCopied(false), 2000)
   }, [briefText])
 
-  /* -- apply custom to live system -- */
   const applyToLive = useCallback(async () => {
     setApplyingLive(true)
     try {
       await applyConstraintOverrides(customRegions)
-      setLiveApplied(true)
-      setTimeout(() => setLiveApplied(false), 3000)
-    } catch {
-      setError('Failed to apply to live system')
-    } finally {
-      setApplyingLive(false)
-    }
+      setLiveApplied(true); setTimeout(() => setLiveApplied(false), 3000)
+    } catch { setError('Failed to apply to live system') }
+    finally { setApplyingLive(false) }
   }, [customRegions])
 
-  /* -- manual re-run (for custom scenario simulate button) -- */
   const triggerManualSim = useCallback(() => {
     const { blocked, restricted, name } = mergedScenario()
     runSimulation(blocked, restricted, name)
   }, [mergedScenario, runSimulation])
 
-  /* -- clear all -- */
   const clearAll = () => {
-    setActiveScenarioIds(new Set())
-    setCustomRegions({})
-    setCustomOpen(false)
-    setSimulationResult(null)
-    setBriefGenerated(false)
-    setBriefText('')
-    setError('')
+    setActiveScenarioIds(new Set()); setCustomRegions({}); setCustomOpen(false)
+    setSimulationResult(null); setBriefGenerated(false); setBriefText(''); setError('')
   }
 
   const isActive = activeScenarioIds.size > 0 || Object.values(customRegions).some(v => v !== 'open')
   const allAffected = simulationResult
     ? [...simulationResult.affected_vessels, ...simulationResult.exposed_vessels]
     : []
-
   const { name: scenarioName } = mergedScenario()
 
-  /* -- Fake shipment for drawer (maps vessel -> Shipment shape) -- */
   function vesselToShipment(v: AffectedVessel): Shipment {
     return {
-      id:                   v.shipment_id,
-      origin:               v.origin,
-      destination:          v.destination,
-      departure_time:       new Date().toISOString(),
-      transport_mode:       'sea',
-      risk_score:           v.risk_score,
-      predicted_delay_days: v.delay_added_days,
-      anomaly_flag:         v.status === 'exposed',
-      status:               v.status === 'exposed' ? 'at_risk' : 'watch',
-      updated_at:           new Date().toISOString(),
+      id: v.shipment_id, origin: v.origin, destination: v.destination,
+      departure_time: new Date().toISOString(), transport_mode: 'sea',
+      risk_score: v.risk_score, predicted_delay_days: v.delay_added_days,
+      anomaly_flag: v.status === 'exposed',
+      status: v.status === 'exposed' ? 'at_risk' : 'watch',
+      updated_at: new Date().toISOString(),
     }
   }
 
-  // ── render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col h-full bg-slate-50 text-slate-900 overflow-hidden">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#f8fafc', overflow: 'hidden' }}>
 
-      {/* -- Top header bar -- */}
-      <header className="flex items-center justify-between px-6 py-3 border-b border-slate-200 bg-slate-50/90 backdrop-blur-sm flex-shrink-0 z-20">
-        <div className="flex items-center gap-4">
-          {isActive ? <PulseRing color="red" /> : <PulseRing color="green" />}
+      {/* ── Top bar ── */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '10px 24px', borderBottom: '1px solid #e2e8f0',
+        background: 'white', flexShrink: 0,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {isActive ? <PulseDot color="red" /> : <PulseDot color="green" />}
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-base font-bold tracking-tight text-slate-800">Real-Time Simulation</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <h1 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', margin: 0 }}>Risk Simulation</h1>
               {isActive && scenarioName && (
-                <span className="text-xs font-semibold bg-red-900/60 text-red-300 border border-red-700/50 px-2.5 py-0.5 rounded-full">
+                <span style={{
+                  fontSize: 10, fontWeight: 600, background: '#fef2f2',
+                  color: '#dc2626', border: '1px solid #fecaca',
+                  padding: '2px 10px', borderRadius: 99,
+                }}>
                   {scenarioName}
                 </span>
               )}
               {!isActive && (
-                <span className="text-xs font-medium bg-green-900/40 text-green-400 border border-green-700/40 px-2.5 py-0.5 rounded-full">
+                <span style={{
+                  fontSize: 10, fontWeight: 500, background: '#f0fdf4',
+                  color: '#16a34a', border: '1px solid #bbf7d0',
+                  padding: '2px 10px', borderRadius: 99,
+                }}>
                   Normal monitoring
                 </span>
               )}
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">Global risk simulation and strategic response centre</p>
+            <p style={{ fontSize: 11, color: '#94a3b8', margin: '2px 0 0' }}>
+              Global risk simulation and strategic response centre
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
           {simulationResult && (
-            <div className="flex gap-4 text-xs">
-              <span className="text-slate-400">
-                <span className="font-semibold text-red-600">{simulationResult.affected_count + simulationResult.exposed_count}</span> affected
-              </span>
-              <span className="text-slate-400">
-                <span className="font-semibold text-amber-600">{simulationResult.reroutable_count}</span> reroutable
-              </span>
-              <span className="text-slate-400">
-                <span className="font-semibold text-red-500">{simulationResult.exposed_count}</span> exposed
-              </span>
-              <span className="text-slate-400">
-                <span className="font-semibold text-green-400">{simulationResult.unaffected_count}</span> safe
-              </span>
+            <div style={{ display: 'flex', gap: 16, fontSize: 12 }}>
+              {[
+                { label: 'affected', val: simulationResult.affected_count + simulationResult.exposed_count, color: '#dc2626' },
+                { label: 'reroutable', val: simulationResult.reroutable_count, color: '#1d4ed8' },
+                { label: 'exposed', val: simulationResult.exposed_count, color: '#dc2626' },
+                { label: 'safe', val: simulationResult.unaffected_count, color: '#16a34a' },
+              ].map(({ label, val, color }) => (
+                <span key={label} style={{ color: '#94a3b8' }}>
+                  <strong style={{ color }}>{val}</strong> {label}
+                </span>
+              ))}
             </div>
           )}
           {isActive && (
             <button
               onClick={clearAll}
-              className="text-xs text-slate-400 hover:text-slate-200 border border-slate-300 hover:border-slate-500 px-3 py-1.5 rounded-lg transition-all"
+              style={{
+                fontSize: 11, color: '#64748b', border: '1px solid #e2e8f0',
+                background: 'white', padding: '5px 12px', borderRadius: 6, cursor: 'pointer',
+              }}
             >
               Clear all
             </button>
           )}
         </div>
-      </header>
+      </div>
 
-      {/* -- Three-panel body -- */}
-      <div className="flex flex-1 overflow-hidden">
+      {/* ── Three-panel body ── */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
-        {/* == LEFT -- Scenario triggers (280px) ================================== */}
-        <aside className="w-[280px] flex-shrink-0 border-r border-slate-200 flex flex-col overflow-hidden bg-white">
-          <div className="px-4 pt-4 pb-3 border-b border-slate-100">
-            <div className="text-xs font-bold text-slate-700 uppercase tracking-widest">Scenario Triggers</div>
-            <div className="text-xs text-slate-500 mt-1">Click to activate · Multiple = compound crisis</div>
+        {/* LEFT panel — scenario triggers */}
+        <aside style={{
+          width: 272, flexShrink: 0, borderRight: '1px solid #e2e8f0',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white',
+        }}>
+          <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid #f1f5f9' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+              Scenario triggers
+            </div>
+            <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 3 }}>
+              Click to activate · multiple = compound crisis
+            </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto py-2 px-2 space-y-0.5">
+          <div style={{ flex: 1, overflowY: 'auto', padding: '8px 8px' }}>
 
-            {/* Geopolitical group */}
-            <div className="px-2 pt-2 pb-1">
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">⚡ Geopolitical</div>
+            {/* Geopolitical */}
+            <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em', padding: '8px 8px 4px' }}>
+              Geopolitical
             </div>
             {SCENARIOS.filter(s => s.category === 'geopolitical').map(sc => {
               const active = activeScenarioIds.has(sc.id)
@@ -444,40 +415,56 @@ export default function RealSimulationPage() {
                 <button
                   key={sc.id}
                   onClick={() => toggleScenario(sc.id)}
-                  className={`w-full text-left rounded-lg px-3 py-2.5 transition-all border ${
-                    active
-                      ? 'bg-red-950/60 border-red-700/60 shadow-[0_0_12px_rgba(239,68,68,0.15)]'
-                      : 'border-transparent hover:bg-slate-50 hover:border-slate-200'
-                  }`}
+                  style={{
+                    width: '100%', textAlign: 'left', display: 'block',
+                    padding: '9px 10px', borderRadius: 8, marginBottom: 2, cursor: 'pointer',
+                    border: active ? '1px solid #fecaca' : '1px solid transparent',
+                    background: active ? '#fef2f2' : 'transparent',
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = '#f8fafc' }}
+                  onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
                 >
-                  <div className="flex items-start gap-2.5">
-                    <span className="text-sm mt-0.5 flex-shrink-0">{sc.icon}</span>
-                    <div className="min-w-0">
-                      <div className={`text-xs font-semibold leading-tight ${active ? 'text-red-300' : 'text-slate-700'}`}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: active ? '#dc2626' : '#1e293b', lineHeight: 1.3 }}>
                         {sc.name}
                       </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">{sc.short}</div>
+                      <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2, lineHeight: 1.4 }}>
+                        {sc.short}
+                      </div>
                       {active && sc.blocked.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1.5">
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
                           {sc.blocked.map(r => (
-                            <span key={r} className="text-[9px] bg-red-900/60 text-red-600 border border-red-800/50 px-1.5 py-0.5 rounded-full">
-                              BLOCKED
-                            </span>
+                            <span key={r} style={{
+                              fontSize: 9, fontWeight: 700, background: '#fef2f2',
+                              color: '#dc2626', border: '1px solid #fecaca',
+                              padding: '1px 6px', borderRadius: 99,
+                            }}>BLOCKED</span>
+                          ))}
+                          {sc.restricted.map(r => (
+                            <span key={r} style={{
+                              fontSize: 9, fontWeight: 700, background: '#fffbeb',
+                              color: '#d97706', border: '1px solid #fde68a',
+                              padding: '1px 6px', borderRadius: 99,
+                            }}>WATCH</span>
                           ))}
                         </div>
                       )}
                     </div>
-                    <div className={`ml-auto mt-0.5 w-3 h-3 rounded-full flex-shrink-0 transition-all ${
-                      active ? 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]' : 'bg-slate-700'
-                    }`} />
+                    <div style={{
+                      width: 8, height: 8, borderRadius: '50%', flexShrink: 0, marginTop: 3,
+                      background: active ? '#dc2626' : '#cbd5e1',
+                      boxShadow: active ? '0 0 6px rgba(220,38,38,0.6)' : 'none',
+                    }} />
                   </div>
                 </button>
               )
             })}
 
-            {/* Environmental group */}
-            <div className="px-2 pt-3 pb-1">
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">🌍 Environmental</div>
+            {/* Environmental */}
+            <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em', padding: '12px 8px 4px' }}>
+              Environmental
             </div>
             {SCENARIOS.filter(s => s.category === 'environmental').map(sc => {
               const active = activeScenarioIds.has(sc.id)
@@ -485,125 +472,136 @@ export default function RealSimulationPage() {
                 <button
                   key={sc.id}
                   onClick={() => toggleScenario(sc.id)}
-                  className={`w-full text-left rounded-lg px-3 py-2.5 transition-all border ${
-                    active
-                      ? 'bg-amber-50 border-amber-700/50 shadow-[0_0_12px_rgba(251,191,36,0.1)]'
-                      : 'border-transparent hover:bg-slate-50 hover:border-slate-200'
-                  }`}
+                  style={{
+                    width: '100%', textAlign: 'left', display: 'block',
+                    padding: '9px 10px', borderRadius: 8, marginBottom: 2, cursor: 'pointer',
+                    border: active ? '1px solid #fde68a' : '1px solid transparent',
+                    background: active ? '#fffbeb' : 'transparent',
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = '#f8fafc' }}
+                  onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
                 >
-                  <div className="flex items-start gap-2.5">
-                    <span className="text-sm mt-0.5 flex-shrink-0">{sc.icon}</span>
-                    <div className="min-w-0">
-                      <div className={`text-xs font-semibold leading-tight ${active ? 'text-amber-300' : 'text-slate-700'}`}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: active ? '#d97706' : '#1e293b', lineHeight: 1.3 }}>
                         {sc.name}
                       </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">{sc.short}</div>
+                      <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2, lineHeight: 1.4 }}>
+                        {sc.short}
+                      </div>
                     </div>
-                    <div className={`ml-auto mt-0.5 w-3 h-3 rounded-full flex-shrink-0 transition-all ${
-                      active ? 'bg-amber-500 shadow-[0_0_6px_rgba(251,191,36,0.8)]' : 'bg-slate-700'
-                    }`} />
+                    <div style={{
+                      width: 8, height: 8, borderRadius: '50%', flexShrink: 0, marginTop: 3,
+                      background: active ? '#f59e0b' : '#cbd5e1',
+                      boxShadow: active ? '0 0 6px rgba(245,158,11,0.6)' : 'none',
+                    }} />
                   </div>
                 </button>
               )
             })}
 
-            {/* Custom scenario */}
-            <div className="px-2 pt-3 pb-1">
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">🛠 Custom</div>
+            {/* Custom */}
+            <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em', padding: '12px 8px 4px' }}>
+              Custom
             </div>
             <button
               onClick={() => setCustomOpen(o => !o)}
-              className={`w-full text-left rounded-lg px-3 py-2.5 transition-all border ${
-                customOpen
-                  ? 'bg-blue-50 border-blue-700/50'
-                  : 'border-transparent hover:bg-slate-50 hover:border-slate-200'
-              }`}
+              style={{
+                width: '100%', textAlign: 'left', display: 'block',
+                padding: '9px 10px', borderRadius: 8, marginBottom: 2, cursor: 'pointer',
+                border: customOpen ? '1px solid #bfdbfe' : '1px solid transparent',
+                background: customOpen ? '#eff6ff' : 'transparent',
+              }}
             >
-              <div className="flex items-center gap-2.5">
-                <span className="text-sm">🔧</span>
-                <div>
-                  <div className="text-xs font-semibold text-slate-700">Build custom scenario</div>
-                  <div className="text-[10px] text-slate-500">Configure any region's status manually</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: customOpen ? '#1d4ed8' : '#1e293b' }}>
+                    Build custom scenario
+                  </div>
+                  <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>
+                    Configure any region manually
+                  </div>
                 </div>
-                <div className={`ml-auto transition-transform ${customOpen ? 'rotate-180' : ''}`}>
-                  <svg className="w-3 h-3 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
+                <span style={{ fontSize: 10, color: '#94a3b8', transform: customOpen ? 'rotate(180deg)' : 'none', display: 'inline-block', transition: 'transform 0.2s' }}>▼</span>
               </div>
             </button>
 
             {customOpen && (
-              <div className="mx-2 mt-1 mb-2 bg-white/90 border border-slate-200 rounded-xl p-3 space-y-2">
+              <div style={{ margin: '4px 4px 8px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: 12 }}>
                 {ALL_REGIONS.map(reg => (
-                  <div key={reg.id} className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] text-slate-400 flex-1 min-w-0 truncate">{reg.name}</span>
+                  <div key={reg.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <span style={{ fontSize: 11, color: '#475569', flex: 1 }}>{reg.name}</span>
                     <select
                       value={customRegions[reg.id] ?? 'open'}
-                      onChange={e => {
-                        setCustomRegions(prev => ({
-                          ...prev,
-                          [reg.id]: e.target.value as 'open' | 'restricted' | 'blocked',
-                        }))
-                      }}
-                      className="text-[10px] bg-slate-800 border border-slate-600 text-slate-700 rounded-md px-1.5 py-1 focus:outline-none focus:border-blue-500"
+                      onChange={e => setCustomRegions(prev => ({ ...prev, [reg.id]: e.target.value as any }))}
+                      style={{ fontSize: 11, border: '1px solid #e2e8f0', borderRadius: 6, padding: '3px 6px', background: 'white', color: '#1e293b' }}
                     >
                       <option value="open">Open</option>
-                      <option value="restricted">Restricted</option>
+                      <option value="restricted">Watch</option>
                       <option value="blocked">Blocked</option>
                     </select>
                   </div>
                 ))}
-                <div className="flex gap-2 pt-2">
+                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                   <button
                     onClick={triggerManualSim}
                     disabled={isSimulating}
-                    className="flex-1 text-xs bg-blue-600 hover:bg-blue-500 text-slate-800 font-semibold py-1.5 rounded-lg transition-all disabled:opacity-50"
+                    style={{ flex: 1, fontSize: 11, fontWeight: 700, background: '#1d4ed8', color: 'white', border: 'none', padding: '7px', borderRadius: 8, cursor: 'pointer', opacity: isSimulating ? 0.5 : 1 }}
                   >
-                    {isSimulating ? 'Simulating…' : 'Simulate'}
+                    {isSimulating ? 'Running...' : 'Simulate'}
                   </button>
                   <button
                     onClick={applyToLive}
                     disabled={applyingLive}
-                    className={`flex-1 text-xs font-semibold py-1.5 rounded-lg transition-all border ${
-                      liveApplied
-                        ? 'bg-green-900/50 text-green-400 border-green-700'
-                        : 'bg-slate-800 hover:bg-slate-700 text-slate-700 border-slate-600'
-                    }`}
+                    style={{ flex: 1, fontSize: 11, fontWeight: 700, background: liveApplied ? '#f0fdf4' : '#0f172a', color: liveApplied ? '#16a34a' : 'white', border: liveApplied ? '1px solid #bbf7d0' : 'none', padding: '7px', borderRadius: 8, cursor: 'pointer' }}
                   >
-                    {liveApplied ? '✓ Applied' : applyingLive ? 'Applying…' : 'Apply to live'}
+                    {liveApplied ? 'Applied ✓' : applyingLive ? 'Applying...' : 'Apply live'}
                   </button>
                 </div>
               </div>
             )}
 
             {/* Summary strip */}
-            <div className="mx-2 mt-3 px-3 py-2.5 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-between">
-              <span className="text-[11px] text-slate-400">
-                <span className="font-bold text-slate-800">{activeScenarioIds.size + (customOpen ? 1 : 0)}</span> events active
+            <div style={{ margin: '8px 4px 4px', padding: '8px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 11, color: '#64748b' }}>
+                <strong style={{ color: '#0f172a' }}>{activeScenarioIds.size + (customOpen ? 1 : 0)}</strong> events active
               </span>
-              <span className="text-[11px] text-slate-400">
-                <span className="font-bold text-slate-800">{affectedRegionCount()}</span> regions affected
+              <span style={{ fontSize: 11, color: '#64748b' }}>
+                <strong style={{ color: '#0f172a' }}>
+                  {[...new Set([
+                    ...[...activeScenarioIds].flatMap(id => {
+                      const s = SCENARIOS.find(sc => sc.id === id)
+                      return s ? [...s.blocked, ...s.restricted] : []
+                    }),
+                    ...Object.entries(customRegions).filter(([, v]) => v !== 'open').map(([k]) => k)
+                  ])].length}
+                </strong> regions affected
               </span>
             </div>
 
           </div>
 
-          {/* Run btn for pre-built */}
+          {/* Run button */}
           {isActive && (
-            <div className="p-3 border-t border-slate-200">
+            <div style={{ padding: 12, borderTop: '1px solid #e2e8f0', background: 'white' }}>
               <button
                 onClick={triggerManualSim}
                 disabled={isSimulating}
-                className="w-full py-2.5 bg-gradient-to-r from-red-700 to-red-600 hover:from-red-600 hover:to-red-500 text-slate-800 text-xs font-bold rounded-xl transition-all shadow-lg shadow-red-900/40 disabled:opacity-60 flex items-center justify-center gap-2"
+                style={{
+                  width: '100%', padding: '10px', background: isSimulating ? '#fee2e2' : '#dc2626',
+                  color: 'white', border: 'none', borderRadius: 10, fontSize: 12,
+                  fontWeight: 700, cursor: isSimulating ? 'not-allowed' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}
               >
                 {isSimulating ? (
                   <>
-                    <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                    <svg style={{ width: 14, height: 14, animation: 'spin 1s linear infinite' }} viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.3" />
+                      <path fill="currentColor" d="M4 12a8 8 0 018-8v8z" opacity="0.8" />
                     </svg>
-                    Simulating fleet…
+                    Simulating fleet...
                   </>
                 ) : 'Run simulation'}
               </button>
@@ -611,214 +609,249 @@ export default function RealSimulationPage() {
           )}
         </aside>
 
-        {/* == CENTRE -- Blast radius map (flex) ================================== */}
-        <main className="flex-1 flex flex-col overflow-hidden">
+        {/* CENTRE panel — map */}
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
           {/* Fleet exposure strip */}
           {simulationResult && (
-            <div className="flex items-center gap-6 px-5 py-2.5 border-b border-slate-200 bg-white flex-shrink-0">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-red-500" />
-                <span className="text-xs text-slate-400"><strong className="text-slate-800">{simulationResult.affected_count + simulationResult.exposed_count}</strong> vessels affected</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-blue-500" />
-                <span className="text-xs text-slate-400"><strong className="text-slate-800">{simulationResult.reroutable_count}</strong> reroutable</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-red-700" />
-                <span className="text-xs text-slate-400"><strong className="text-red-600">{simulationResult.exposed_count}</strong> exposed</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500" />
-                <span className="text-xs text-slate-400"><strong className="text-green-400">{simulationResult.unaffected_count}</strong> unaffected</span>
-              </div>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 24,
+              padding: '8px 20px', borderBottom: '1px solid #e2e8f0', background: 'white', flexShrink: 0,
+            }}>
+              {[
+                { dot: '#dc2626', label: 'vessels affected', val: simulationResult.affected_count + simulationResult.exposed_count },
+                { dot: '#1d4ed8', label: 'reroutable', val: simulationResult.reroutable_count },
+                { dot: '#dc2626', label: 'exposed', val: simulationResult.exposed_count },
+                { dot: '#16a34a', label: 'safe', val: simulationResult.unaffected_count },
+              ].map(({ dot, label, val }) => (
+                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: dot }} />
+                  <span style={{ fontSize: 11, color: '#64748b' }}>
+                    <strong style={{ color: '#0f172a' }}>{val}</strong> {label}
+                  </span>
+                </div>
+              ))}
             </div>
           )}
 
-          {/* Map area */}
-          <div className="flex-1 flex bg-slate-100 relative overflow-hidden">
+          {/* Cascade effect strip */}
+          {simulationResult?.cascade_effects && simulationResult.cascade_effects.length > 0 && (
+            <div style={{
+              display: 'flex', gap: 8, padding: '7px 16px',
+              background: '#fffbeb', borderBottom: '1px solid #fde68a', flexShrink: 0,
+              overflowX: 'auto',
+            }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: '#92400e', whiteSpace: 'nowrap', alignSelf: 'center' }}>
+                CASCADE EFFECT:
+              </span>
+              {simulationResult.cascade_effects.map((c, i) => (
+                <div key={i} style={{
+                  fontSize: 10, padding: '3px 10px', borderRadius: 99,
+                  background: c.alert_level === 'high' ? '#fef2f2' : '#fffbeb',
+                  border: `1px solid ${c.alert_level === 'high' ? '#fecaca' : '#fde68a'}`,
+                  color: c.alert_level === 'high' ? '#dc2626' : '#d97706',
+                  fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0,
+                }}>
+                  {c.port} +{c.congestion_increase_pct}%
+                </div>
+              ))}
+            </div>
+          )}
 
-            <WorldMap 
+          {/* Map */}
+          <div style={{ flex: 1, position: 'relative', overflow: 'hidden', background: '#f1f5f9' }}>
+            <WorldMap
               shipments={shipments}
               simulationResult={simulationResult}
               activeScenario={mergedScenario()}
+              cascadeEffects={simulationResult?.cascade_effects ?? []}
             />
 
-            {/* Scenario active overlay */}
+            {/* Loading overlay */}
             {isSimulating && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-slate-100/80 backdrop-blur-sm">
-                <div className="relative">
-                  <div className="w-16 h-16 rounded-full border-2 border-red-500/30 animate-ping absolute inset-0" />
-                  <div className="w-16 h-16 rounded-full border-2 border-red-500/60 animate-pulse" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <svg className="w-7 h-7 text-red-600 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+              <div style={{
+                position: 'absolute', inset: 0, background: 'rgba(248,250,252,0.85)',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10,
+              }}>
+                <div style={{ width: 56, height: 56, position: 'relative', marginBottom: 16 }}>
+                  <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid #fee2e2', animation: 'ping 1.5s ease-in-out infinite' }} />
+                  <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid #fecaca' }} />
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg style={{ width: 24, height: 24, color: '#dc2626' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
                   </div>
                 </div>
-                <div className="mt-5 text-sm font-semibold text-slate-700">Simulating fleet exposure…</div>
-                <div className="mt-1 text-xs text-slate-500">Running constraint × decision engine for all active shipments</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Simulating fleet exposure...</div>
+                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Running constraint × decision engine for all shipments</div>
               </div>
             )}
 
-            {/* Scenario result summary on map - minimized overlay */}
-            {!isSimulating && simulationResult && (
-              <div className="absolute bottom-6 left-6 z-10 w-80 bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl p-4 shadow-2xl">
-                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Simulation Summary</div>
-                <div className="text-sm font-bold text-slate-800 mb-3">
-                  {simulationResult.scenario_name}
-                </div>
-                
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-xl bg-red-50 border border-red-800/30 p-2.5">
-                    <div className="text-base font-bold text-red-600">{fmt(simulationResult.total_value_at_risk_usd)}</div>
-                    <div className="text-[10px] text-slate-500">cargo at risk</div>
-                  </div>
-                  <div className="rounded-xl bg-amber-50 border border-amber-800/30 p-2.5">
-                    <div className="text-base font-bold text-amber-600">{fmt(simulationResult.daily_loss_rate_usd)}</div>
-                    <div className="text-[10px] text-slate-500">daily loss</div>
-                  </div>
-                </div>
-
-                {simulationResult.exposed_count > 0 && (
-                  <div className="mt-2 text-[10px] font-bold text-red-600 bg-red-900/40 border border-red-800/50 px-2.5 py-1.5 rounded-lg flex items-center justify-between">
-                    <span>⚠ {simulationResult.exposed_count} VESSELS EXPOSED</span>
-                    <PulseRing color="red" />
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* Idle state */}
             {!isSimulating && !simulationResult && (
-              <div className="text-center">
-                <div className="text-6xl mb-4 opacity-30">🌐</div>
-                <div className="text-sm font-semibold text-slate-500">Select a scenario to begin simulation</div>
-                <div className="text-xs text-slate-600 mt-1">Fleet exposure will be calculated in real time</div>
+              <div style={{
+                position: 'absolute', inset: 0,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                pointerEvents: 'none',
+              }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8' }}>
+                  Select a scenario to begin simulation
+                </div>
+                <div style={{ fontSize: 11, color: '#cbd5e1', marginTop: 4 }}>
+                  Fleet exposure will be calculated in real time
+                </div>
               </div>
             )}
-
           </div>
         </main>
 
-        {/* == RIGHT -- Strategic fallout (340px) =============================== */}
-        <aside className="w-[340px] flex-shrink-0 border-l border-slate-200 flex flex-col overflow-hidden bg-white">
 
-          {/* -- Financial impact metrics -- */}
-          <div className="px-4 pt-4 pb-3 border-b border-slate-100">
-            <div className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-3">Financial impact</div>
+        {/* RIGHT panel — strategic fallout */}
+        <aside style={{
+          width: 320, flexShrink: 0, borderLeft: '1px solid #e2e8f0',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'white',
+        }}>
+
+          {/* Financial metrics */}
+          <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid #f1f5f9' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>
+              Financial impact
+            </div>
             {simulationResult ? (
-              <div className="grid grid-cols-2 gap-2">
-                <MetricCard
-                  label="Cargo at risk"
-                  value={fmt(simulationResult.total_value_at_risk_usd)}
-                  sub="across affected fleet"
-                  color="red"
-                />
-                <MetricCard
-                  label="Daily loss rate"
-                  value={fmt(simulationResult.daily_loss_rate_usd)}
-                  sub="demurrage + holding"
-                  color="amber"
-                />
-                <MetricCard
-                  label="Avg delay"
-                  value={`${simulationResult.avg_delay_days}d`}
-                  sub="per rerouted vessel"
-                  color="blue"
-                />
-                <MetricCard
-                  label="Exposed vessels"
-                  value={`${simulationResult.exposed_count}`}
-                  sub="no safe route"
-                  color={simulationResult.exposed_count > 0 ? 'red' : 'slate'}
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <MetricCard label="Cargo at risk" value={fmt(simulationResult.total_value_at_risk_usd)} sub="across fleet" color="red" />
+                <MetricCard label="Daily loss" value={fmt(simulationResult.daily_loss_rate_usd)} sub="demurrage + holding" color="amber" />
+                <MetricCard label="Avg delay" value={`${simulationResult.avg_delay_days}d`} sub="per vessel" color="blue" />
+                <MetricCard label="Exposed" value={`${simulationResult.exposed_count}`} sub="no safe route" color={simulationResult.exposed_count > 0 ? 'red' : 'slate'} />
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-2">
-                {['Cargo at risk', 'Daily loss rate', 'Avg delay', 'Exposed vessels'].map(l => (
-                  <div key={l} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <div className="text-xs text-slate-600 mb-1">{l}</div>
-                    <div className="h-5 w-16 bg-slate-800 rounded animate-pulse" />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {['Cargo at risk', 'Daily loss', 'Avg delay', 'Exposed'].map(l => (
+                  <div key={l} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: 14 }}>
+                    <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 8 }}>{l}</div>
+                    <div style={{ height: 16, width: 60, background: '#e2e8f0', borderRadius: 4 }} />
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* -- Affected vessels list -- */}
-          <div className="flex-1 overflow-y-auto min-h-0">
-            <div className="px-4 pt-3 pb-2 sticky top-0 bg-white z-10 border-b border-slate-100">
-              <div className="text-xs font-bold text-slate-700 uppercase tracking-widest">
+          {/* Affected vessels */}
+          <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+            <div style={{
+              padding: '10px 16px 8px', position: 'sticky', top: 0,
+              background: 'white', borderBottom: '1px solid #f1f5f9', zIndex: 5,
+            }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                 Affected vessels
                 {allAffected.length > 0 && (
-                  <span className="ml-2 text-[10px] font-normal text-slate-500 normal-case">
+                  <span style={{ marginLeft: 8, fontWeight: 400, color: '#94a3b8', textTransform: 'none' }}>
                     {allAffected.length} total
                   </span>
                 )}
               </div>
             </div>
 
-            {allAffected.length === 0 && !simulationResult && (
-              <div className="px-4 py-8 text-center">
-                <div className="text-slate-600 text-xs">No simulation active</div>
-              </div>
-            )}
-            {simulationResult && allAffected.length === 0 && (
-              <div className="px-4 py-8 text-center">
-                <div className="text-green-500 text-sm">✓</div>
-                <div className="text-slate-400 text-xs mt-1">No vessels affected by this scenario</div>
+            {allAffected.filter(v => v.status !== 'exposed').length > 0 && (
+              <div style={{ padding: '8px 12px', borderBottom: '1px solid #f1f5f9' }}>
+                <button
+                  onClick={() => allAffected.filter(v => v.status !== 'exposed').forEach(v => autoReroute(v))}
+                  style={{
+                    width: '100%', fontSize: 11, fontWeight: 700,
+                    background: '#1d4ed8', color: 'white',
+                    border: 'none', borderRadius: 8, padding: '8px', cursor: 'pointer',
+                  }}
+                >
+                  Auto-reroute all {allAffected.filter(v => v.status !== 'exposed').length} reroutable vessels
+                </button>
               </div>
             )}
 
-            <div className="px-3 py-2 space-y-1.5">
+            {!simulationResult && (
+              <div style={{ padding: '24px 16px', textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>
+                No simulation active
+              </div>
+            )}
+            {simulationResult && allAffected.length === 0 && (
+              <div style={{ padding: '24px 16px', textAlign: 'center' }}>
+                <div style={{ fontSize: 20, color: '#16a34a', marginBottom: 6 }}>✓</div>
+                <div style={{ fontSize: 12, color: '#64748b' }}>No vessels affected by this scenario</div>
+              </div>
+            )}
+
+            <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
               {allAffected.map((v, i) => (
                 <div
                   key={v.shipment_id + i}
-                  className={`rounded-xl border px-3 py-2.5 transition-all ${
-                    v.status === 'exposed'
-                      ? 'border-red-800/50 bg-red-950/30'
-                      : 'border-slate-200 bg-slate-50 hover:bg-slate-50'
-                  }`}
+                  style={{
+                    borderRadius: 10, padding: '10px 12px',
+                    border: v.status === 'exposed' ? '1px solid #fecaca' : '1px solid #e2e8f0',
+                    background: v.status === 'exposed' ? '#fef2f2' : '#f8fafc',
+                  }}
                 >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${
-                        v.status === 'exposed'
-                          ? 'bg-red-900/60 text-red-600 border-red-700/50'
-                          : 'bg-amber-900/50 text-amber-600 border-amber-700/40'
-                      }`}>
-                        {v.status === 'exposed' ? 'EXPOSED' : 'REROUTABLE'}
-                      </span>
-                    </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <span style={{
+                      fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99,
+                      background: v.status === 'exposed' ? '#fef2f2' : '#eff6ff',
+                      color: v.status === 'exposed' ? '#dc2626' : '#1d4ed8',
+                      border: v.status === 'exposed' ? '1px solid #fecaca' : '1px solid #bfdbfe',
+                    }}>
+                      {v.status === 'exposed' ? 'EXPOSED' : 'REROUTABLE'}
+                    </span>
                     <button
                       onClick={() => setDrawerShipment(vesselToShipment(v))}
-                      className="text-[10px] text-blue-600 hover:text-blue-300 transition-colors"
+                      style={{ fontSize: 10, color: '#1d4ed8', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                     >
-                      View detail -
+                      View detail →
                     </button>
                   </div>
-                  <div className="text-xs font-semibold text-slate-200 truncate">
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#0f172a', marginBottom: 3 }}>
                     {v.origin} → {v.destination}
                   </div>
-                  <div className="text-[10px] text-slate-500 mt-0.5 truncate">
-                    {v.current_route} - <span className={v.status === 'exposed' ? 'text-red-600' : 'text-blue-600'}>{v.recommended_route}</span>
+                  <div style={{ fontSize: 10, color: '#64748b', marginBottom: 6 }}>
+                    {v.current_route}
+                    {v.recommended_route && v.recommended_route !== v.current_route && (
+                      <> → <span style={{ color: '#1d4ed8' }}>{v.recommended_route}</span></>
+                    )}
                   </div>
-                  <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-500">
-                    <span className={v.delay_added_days > 0 ? 'text-amber-600 font-semibold' : 'text-slate-600'}>
-                      {fmtDelay(v.delay_added_days)}
+                  <div style={{ marginTop: 8 }}>
+                    {reroutedIds.has(v.shipment_id) ? (
+                      <div style={{ fontSize: 10, fontWeight: 700, color: '#16a34a', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 6, padding: '4px 10px', textAlign: 'center' }}>
+                        ✓ Auto-rerouted via {v.recommended_route}
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => autoReroute(v)}
+                        disabled={v.status === 'exposed' || reroutingIds.has(v.shipment_id)}
+                        style={{
+                          width: '100%', fontSize: 10, fontWeight: 700,
+                          background: v.status === 'exposed' ? '#f8fafc' : '#1d4ed8',
+                          color: v.status === 'exposed' ? '#94a3b8' : 'white',
+                          border: v.status === 'exposed' ? '1px solid #e2e8f0' : 'none',
+                          borderRadius: 6, padding: '5px', cursor: v.status === 'exposed' ? 'not-allowed' : 'pointer',
+                          opacity: reroutingIds.has(v.shipment_id) ? 0.6 : 1,
+                        }}
+                      >
+                        {reroutingIds.has(v.shipment_id) ? 'Rerouting...' : v.status === 'exposed' ? 'No safe route available' : ' Auto-reroute now'}
+                      </button>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, fontSize: 10, color: '#94a3b8', marginTop: 6 }}>
+                    {v.delay_added_days > 0 && (
+                      <span style={{ color: '#d97706', fontWeight: 700 }}>
+                        +{v.delay_added_days.toFixed(1)} days
+                      </span>
+                    )}
+                    <span style={{ fontWeight: 600, color: '#dc2626' }}>
+                      {v.cost_impact_usd >= 1_000_000
+                        ? `$${(v.cost_impact_usd / 1_000_000).toFixed(1)}M`
+                        : `$${(v.cost_impact_usd / 1_000).toFixed(0)}k`} exposure
                     </span>
-                    <span className="text-slate-600">·</span>
-                    <span>{fmt(v.cost_impact_usd)}</span>
                     {v.co2_delta_tonnes !== 0 && (
-                      <>
-                        <span className="text-slate-600">·</span>
-                        <span className={v.co2_delta_tonnes > 0 ? 'text-orange-400' : 'text-green-400'}>
-                          {v.co2_delta_tonnes > 0 ? '+' : ''}{v.co2_delta_tonnes.toFixed(0)}t CO₂
-                        </span>
-                      </>
+                      <span style={{ color: v.co2_delta_tonnes > 0 ? '#ea580c' : '#16a34a' }}>
+                        {v.co2_delta_tonnes > 0 ? '+' : ''}{v.co2_delta_tonnes.toFixed(0)}t CO₂
+                      </span>
                     )}
                   </div>
                 </div>
@@ -826,54 +859,70 @@ export default function RealSimulationPage() {
             </div>
           </div>
 
-          {/* -- Analysis Insights button -- */}
-          <div className="border-t border-slate-200 p-4 flex-shrink-0 bg-white">
+          {/* Generate advisory button */}
+          <div style={{ padding: 12, borderTop: '1px solid #e2e8f0', background: 'white', flexShrink: 0 }}>
             <button
-              onClick={() => {
-                setIsModalOpen(true)
-                if (!briefGenerated) generateBrief()
-              }}
+              onClick={() => { setIsModalOpen(true); if (!briefGenerated) generateBrief() }}
               disabled={!simulationResult || isSimulating}
-              className="w-full py-2.5 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-2
-                bg-violet-600 border-violet-700 text-white
-                hover:bg-violet-700 hover:border-violet-800 shadow-sm
-                disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{
+                width: '100%', padding: '10px', borderRadius: 10, fontSize: 12, fontWeight: 700,
+                border: 'none', cursor: simulationResult && !isSimulating ? 'pointer' : 'not-allowed',
+                background: simulationResult && !isSimulating ? '#7c3aed' : '#e2e8f0',
+                color: simulationResult && !isSimulating ? 'white' : '#94a3b8',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              }}
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              {briefGenerated ? 'View Analysis Insights' : 'Generate Analysis Insights'}
+              {briefGenerated ? 'View strategic advisory' : 'Generate strategic advisory'}
             </button>
           </div>
-
         </aside>
       </div>
 
-      {/* -- Shipment Drawer overlay -- */}
+
+      {/* Shipment drawer */}
       {drawerShipment && (
-        <div className="fixed inset-0 z-50 flex">
-          <div
-            className="flex-1 bg-black/60 backdrop-blur-sm"
-            onClick={() => setDrawerShipment(null)}
-          />
-          <div className="w-96 bg-white border-l border-slate-300 overflow-y-auto">
-            <ShipmentDrawer
-              shipment={drawerShipment}
-              onClose={() => setDrawerShipment(null)}
-            />
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex' }}>
+          <div style={{ flex: 1, background: 'rgba(0,0,0,0.4)' }} onClick={() => setDrawerShipment(null)} />
+          <div style={{ width: 384, background: 'white', borderLeft: '1px solid #e2e8f0', overflowY: 'auto' }}>
+            <ShipmentDrawer shipment={drawerShipment} onClose={() => setDrawerShipment(null)} />
           </div>
         </div>
       )}
 
-      {/* -- Error toast -- */}
+      {/* Error toast */}
       {error && (
-        <div className="fixed bottom-4 right-4 z-50 bg-red-950 border border-red-700 text-red-300 text-xs px-4 py-3 rounded-xl shadow-xl flex items-center gap-3">
-          <span>⚠ {error}</span>
-          <button onClick={() => setError('')} className="text-red-600 hover:text-red-200">×</button>
+        <div style={{
+          position: 'fixed', bottom: 16, right: 16, zIndex: 50,
+          background: '#fef2f2', border: '1px solid #fecaca',
+          color: '#dc2626', fontSize: 12, padding: '10px 16px',
+          borderRadius: 10, display: 'flex', alignItems: 'center', gap: 10,
+        }}>
+          <span style={{ marginRight: 4, fontWeight: 700 }}>!</span> {error}
+          <button onClick={() => setError('')} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16 }}>×</button>
         </div>
       )}
 
-      <AnalysisModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} result={simulationResult} geminiBrief={briefText} isLoading={geminiLoading} />
+      <AnalysisModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        result={simulationResult}
+        geminiBrief={briefText}
+        isLoading={geminiLoading}
+      />
+
+      <style>{`
+        @keyframes ping {
+          0%, 100% { transform: scale(1); opacity: 0.3; }
+          50% { transform: scale(1.8); opacity: 0; }
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }

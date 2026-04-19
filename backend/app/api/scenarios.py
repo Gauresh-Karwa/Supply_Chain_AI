@@ -88,45 +88,36 @@ def _build_gemini_prompt(
     exposed_count: int,
     reroutable_count: int,
     total_count: int,
-    total_value: float,
-    daily_loss: float,
+    total_value_usd: float,
+    daily_loss_usd: float,
     avg_delay: float,
-    top_vessels: list[dict],
+    routes_summary: str,
 ) -> str:
-    vessel_lines = []
-    for v in top_vessels[:3]:
-        vessel_lines.append(
-            f"  - {v['origin']} → {v['destination']}: "
-            f"{v['current_route']} → {v['recommended_route']} "
-            f"(+{v['delay_added_days']:.1f} days, "
-            f"cost impact ${v['cost_impact_usd']:,.0f})"
-        )
-    vessels_str = "\n".join(vessel_lines) if vessel_lines else "  - No critical vessels identified."
+    return f"""You are the Chief Risk Officer of a Fortune 500 maritime logistics firm. Write a concise executive advisory brief.
 
-    return f"""You are the Chief Risk Officer at a major global shipping company.
-A crisis has just occurred: {scenario_name}.
+Crisis: {scenario_name}
+Fleet impact: {affected_count} of {total_count} vessels affected — {exposed_count} with no safe route, {reroutable_count} reroutable
+Cargo value at risk: ${total_value_usd:,.0f}
+Daily financial loss: ${daily_loss_usd:,.0f}
+Average rerouting delay: {avg_delay:.1f} days
+Top impacted routes: {routes_summary}
 
-Current fleet exposure:
-- {affected_count} vessels affected out of {total_count} active
-- {exposed_count} vessels have no safe alternative route
-- {reroutable_count} vessels can be rerouted
-- Total cargo value at risk: ${total_value / 1_000_000:.1f}M
-- Estimated daily financial loss: ${daily_loss / 1_000:.0f}k
-- Average rerouting delay: {avg_delay:.1f} days
+Output format — write EXACTLY these four labelled sections with NO markdown, NO hashtags, NO asterisks, NO emojis:
 
-Most critical vessels:
-{vessels_str}
+SITUATION
+Two sentences maximum. State the crisis, the scale of fleet exposure, and the immediate financial figure.
 
-Write a point-wise executive advisory brief:
-1. Situation summary (what happened, scale of impact)
-2. Immediate financial exposure
-3. Three specific recommended actions in priority order
-4. One strategic consideration for the next 48 hours
+KEY RISKS
+Three bullet points, each one sentence. Identify the geopolitical or environmental causes, the most vulnerable route corridors, and the highest-exposure cargo type.
 
-Write for a CEO audience. Be specific, not generic.
-Use the vessel and route data above.
-Please format the entire response using clear and concise bullet points. Provide the answer in valid markdown format.
-"""
+IMMEDIATE ACTIONS
+Three numbered actions. Each must be one sentence starting with an imperative verb, with a concrete timeframe (e.g. within 24 hours, within 72 hours).
+
+FINANCIAL EXPOSURE
+Two sentences. Give a specific cost range for a 7-day and 14-day crisis duration, referencing demurrage rates. Use dollar figures.
+
+Write in formal, board-level prose. No placeholders. No filler language."""
+
 
 @router.post("/simulate")
 async def simulate_scenario(req: SimulateRequest):
@@ -252,8 +243,10 @@ async def simulate_scenario(req: SimulateRequest):
                     _co2(best_alt) - _co2(current_route), 2
                 )
 
-                # Cost impact: delay × demurrage rate
-                cost_impact = round(delay_added * DEFAULT_DEMURRAGE_RATE, 0)
+                # In the affected vessel cost calculation — replace flat $18,000/day with cargo-specific rate
+                daily_cost = ship.get('daily_delay_cost_usd') or 18000
+                cost_impact = round(delay_added * daily_cost, 0)
+                cargo_value = ship.get('cargo_value_usd') or 15000000
 
                 vessel_entry = {
                     "shipment_id":        ship["id"],
@@ -266,10 +259,14 @@ async def simulate_scenario(req: SimulateRequest):
                     "co2_delta_tonnes":   co2_delta,
                     "risk_score":         ship.get("risk_score", 0),
                     "status":             "reroutable",
+                    "cargo_value_usd":    cargo_value,
+                    "daily_delay_cost_usd": daily_cost,
                 }
                 affected_vessels.append(vessel_entry)
 
             else:
+                daily_cost = ship.get('daily_delay_cost_usd') or 18000
+                cargo_value = ship.get('cargo_value_usd') or 15000000
                 # All routes blocked — vessel is EXPOSED
                 vessel_entry = {
                     "shipment_id":       ship["id"],
@@ -278,10 +275,12 @@ async def simulate_scenario(req: SimulateRequest):
                     "current_route":     current_route_label,
                     "recommended_route": "No safe route available",
                     "delay_added_days":  0,
-                    "cost_impact_usd":   DEFAULT_DEMURRAGE_RATE * 14,  # 2-week estimate
+                    "cost_impact_usd":   daily_cost * 14,  # 2-week estimate
                     "co2_delta_tonnes":  0,
                     "risk_score":        ship.get("risk_score", 1.0),
                     "status":            "exposed",
+                    "cargo_value_usd":    cargo_value,
+                    "daily_delay_cost_usd": daily_cost,
                 }
                 exposed_vessels.append(vessel_entry)
 
@@ -291,8 +290,8 @@ async def simulate_scenario(req: SimulateRequest):
         reroutable_count = len(affected_vessels)
         exposed_count   = len(exposed_vessels)
 
-        total_value = affected_count * DEFAULT_CARGO_VALUE_USD
-        daily_loss  = affected_count * DEFAULT_DEMURRAGE_RATE
+        total_value = sum(v.get("cargo_value_usd", 15000000) for v in all_affected)
+        daily_loss  = sum(v.get("daily_delay_cost_usd", 18000) for v in all_affected)
 
         delays = [v["delay_added_days"] for v in affected_vessels if v["delay_added_days"] > 0]
         avg_delay = round(sum(delays) / len(delays), 1) if delays else 0.0
@@ -309,16 +308,23 @@ async def simulate_scenario(req: SimulateRequest):
         # ── 6. Gemini executive brief ──────────────────────────────────────────
         gemini_brief = ""
         if affected_count > 0:
+            # Prepare routes summary for prompt
+            top_3 = top_vessels[:3]
+            routes_summary = "\n".join([
+                f"- {v['origin']} to {v['destination']}: ${v['cost_impact_usd']:,.0f} impact, {v['delay_added_days']}d delay"
+                for v in top_3
+            ])
+
             prompt = _build_gemini_prompt(
                 scenario_name    = req.scenario_name,
                 affected_count   = affected_count,
                 exposed_count    = exposed_count,
                 reroutable_count = reroutable_count,
                 total_count      = total_count,
-                total_value      = total_value,
-                daily_loss       = daily_loss,
+                total_value_usd  = total_value,
+                daily_loss_usd   = daily_loss,
                 avg_delay        = avg_delay,
-                top_vessels      = top_vessels,
+                routes_summary   = routes_summary,
             )
             try:
                 client   = genai.Client(api_key=GEMINI_API_KEY)
@@ -329,23 +335,9 @@ async def simulate_scenario(req: SimulateRequest):
                 gemini_brief = response.text.strip()
             except Exception as e:
                 print(f"[scenarios] Gemini error: {e}")
-                gemini_brief = (
-                    f"Crisis assessment: {req.scenario_name} has placed {affected_count} vessels "
-                    f"at operational risk, with {exposed_count} exposed to complete route blockage. "
-                    f"Estimated fleet cargo value at risk stands at ${total_value / 1_000_000:.1f}M "
-                    f"with a daily loss rate of ${daily_loss / 1_000:.0f}k. "
-                    f"Immediate actions: (1) Reroute {reroutable_count} vessels via alternative corridors, "
-                    f"(2) Issue force majeure notices for {exposed_count} exposed vessels, "
-                    f"(3) Activate contingency contracts with alternative carriers. "
-                    f"Strategic consideration: Monitor the situation for 48 hours before committing to "
-                    f"full fleet rerouting, as resolution may negate the need for costly diversions."
-                )
+                gemini_brief = f"STRATEGIC ADVISORY: Crisis {req.scenario_name} has impacted {affected_count} vessels."
         else:
-            gemini_brief = (
-                f"Scenario assessment complete: {req.scenario_name} does not currently affect any "
-                f"active fleet vessels. All {total_count} shipments are on unaffected routes. "
-                f"Continue normal monitoring."
-            )
+            gemini_brief = f"No active fleet vessels affected by {req.scenario_name}."
 
         # ── 7. Optional save to Supabase ───────────────────────────────────────
         if req.save_simulation:
@@ -364,6 +356,46 @@ async def simulate_scenario(req: SimulateRequest):
             except Exception as e:
                 print(f"[scenarios] Save error (non-fatal): {e}")
 
+        # ── 8. Port cascade computation ────────────────────────────────────────
+        def compute_port_cascade(affected: list, exposed: list) -> list:
+            """
+            When routes are blocked, vessels reroute to alternate paths.
+            Destination ports receive increased traffic — compute congestion delta.
+            """
+            from collections import defaultdict
+
+            all_ships = affected + exposed
+            base_traffic     = defaultdict(int)
+            rerouted_traffic = defaultdict(int)
+
+            for v in all_ships:
+                base_traffic[v["destination"]] += 1
+
+            for v in affected:  # reroutable vessels
+                rerouted_traffic[v["destination"]] += 1
+
+            cascade_ports = []
+            for port, rerouted in rerouted_traffic.items():
+                base = base_traffic.get(port, 0)
+                if base == 0:
+                    continue
+                increase_pct = round((rerouted / max(base, 1)) * 100, 0)
+                if increase_pct >= 20:
+                    cascade_ports.append({
+                        "port":                    port,
+                        "rerouted_vessels":        rerouted,
+                        "congestion_increase_pct": increase_pct,
+                        "alert_level":             "high" if increase_pct >= 50 else "medium",
+                        "message": (
+                            f"{port}: +{increase_pct:.0f}% projected congestion "
+                            f"({rerouted} rerouted vessels incoming)"
+                        ),
+                    })
+
+            return sorted(cascade_ports, key=lambda x: x["congestion_increase_pct"], reverse=True)
+
+        cascade_effects = compute_port_cascade(affected_vessels, exposed_vessels)
+
         return {
             "scenario_name":          req.scenario_name,
             "affected_count":         affected_count,
@@ -376,6 +408,7 @@ async def simulate_scenario(req: SimulateRequest):
             "affected_vessels":       affected_vessels,
             "exposed_vessels":        exposed_vessels,
             "gemini_brief":           gemini_brief,
+            "cascade_effects":        cascade_effects,
         }
     except Exception as e:
         print(f"[scenarios] Simulation crash: {e}")

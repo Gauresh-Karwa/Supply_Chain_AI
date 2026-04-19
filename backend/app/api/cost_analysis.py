@@ -24,10 +24,19 @@ class CostAnalysisCreate(BaseModel):
 
 @router.get("")
 async def list_analyses():
-    result = supabase.table("cost_analyses").select("*").order(
-        "created_at", desc=True
-    ).execute()
-    return {"analyses": result.data, "count": len(result.data)}
+    try:
+        result = supabase.table("cost_analyses").select("*").order(
+            "created_at", desc=True
+        ).execute()
+        if result.data:
+            return {"analyses": result.data, "count": len(result.data)}
+    except Exception as e:
+        print(f"[cost-analysis] Fallback to demo ledger. DB error: {e}")
+        
+    # DB empty / RLS blocked — serve in-memory demo ledger
+    from app.core.demo_ledger import get_demo_analyses
+    demo = get_demo_analyses()
+    return {"analyses": demo, "count": len(demo), "_source": "demo"}
 
 @router.post("")
 async def create_analysis(body: CostAnalysisCreate):

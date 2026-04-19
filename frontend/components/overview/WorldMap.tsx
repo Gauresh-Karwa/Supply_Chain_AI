@@ -1,60 +1,60 @@
 'use client'
 import { useEffect, useRef, useCallback, useState } from 'react'
-import { Shipment, SimulationResult } from '@/types'
+import { Shipment, SimulationResult, CascadePort } from '@/types'
 
 // AIS vessel name generator (deterministic off shipment id)
 function getVesselName(id: string): string {
-  const names = ['EVER GIVEN','MSC GULSUN','COSCO SHIPPING','HMM ALGECIRAS',
-    'MADRID MAERSK','OOCL HONG KONG','CMA CGM ANTOINE','ZIM INTEGRATED',
-    'YANG MING WISH','ONE INNOVATION','EVERGREEN LIGHT','HAPAG BERLIN',
-    'COSCO GLORY','MSC OSCAR','MAERSK MC-KINNEY','OOCL GERMANY']
+  const names = ['EVER GIVEN', 'MSC GULSUN', 'COSCO SHIPPING', 'HMM ALGECIRAS',
+    'MADRID MAERSK', 'OOCL HONG KONG', 'CMA CGM ANTOINE', 'ZIM INTEGRATED',
+    'YANG MING WISH', 'ONE INNOVATION', 'EVERGREEN LIGHT', 'HAPAG BERLIN',
+    'COSCO GLORY', 'MSC OSCAR', 'MAERSK MC-KINNEY', 'OOCL GERMANY']
   const hash = id.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
   return names[hash % names.length]
 }
 
 const PORT_DATA: Record<string, { lon: number; lat: number; label: string }> = {
-  'Shanghai':   { lon: 121.5, lat: 31.2,  label: 'Shanghai'    },
-  'Singapore':  { lon: 103.8, lat:  1.4,  label: 'Singapore'   },
-  'Rotterdam':  { lon:   4.5, lat: 51.9,  label: 'Rotterdam'   },
-  'Dubai':      { lon:  55.3, lat: 25.2,  label: 'Dubai'       },
-  'Mumbai':     { lon:  72.8, lat: 18.9,  label: 'Mumbai'      },
-  'Colombo':    { lon:  79.9, lat:  6.9,  label: 'Colombo'     },
-  'Busan':      { lon: 129.1, lat: 35.2,  label: 'Busan'       },
-  'Hong_Kong':  { lon: 114.2, lat: 22.3,  label: 'Hong Kong'   },
-  'Hamburg':    { lon:  10.0, lat: 53.6,  label: 'Hamburg'     },
-  'Antwerp':    { lon:   4.4, lat: 51.2,  label: 'Antwerp'     },
-  'Piraeus':    { lon:  23.6, lat: 37.9,  label: 'Piraeus'     },
-  'Karachi':    { lon:  67.0, lat: 24.9,  label: 'Karachi'     },
-  'Djibouti':   { lon:  43.1, lat: 11.6,  label: 'Djibouti'    },
-  'Port_Klang': { lon: 101.4, lat:  3.0,  label: 'Port Klang'  },
-  'Los_Angeles':{ lon:-118.2, lat: 34.1,  label: 'Los Angeles' },
-  'New_York':   { lon: -74.0, lat: 40.7,  label: 'New York'    },
-  'Santos':     { lon: -46.3, lat:-24.0,  label: 'Santos'      },
-  'Sydney':     { lon: 151.2, lat:-33.9,  label: 'Sydney'      },
-  'Melbourne':  { lon: 145.0, lat:-37.8,  label: 'Melbourne'   },
-  'Tokyo':      { lon: 139.7, lat: 35.7,  label: 'Tokyo'       },
-  'Yokohama':   { lon: 139.6, lat: 35.4,  label: 'Yokohama'    },
-  'Shenzhen':   { lon: 114.1, lat: 22.5,  label: 'Shenzhen'    },
-  'Ningbo':     { lon: 121.5, lat: 29.9,  label: 'Ningbo'      },
-  'Qingdao':    { lon: 120.3, lat: 36.1,  label: 'Qingdao'     },
-  'Kaohsiung':  { lon: 120.3, lat: 22.6,  label: 'Kaohsiung'   },
-  'Houston':    { lon: -95.4, lat: 29.8,  label: 'Houston'     },
-  'Savannah':   { lon: -81.1, lat: 32.1,  label: 'Savannah'    },
-  'Miami':      { lon: -80.2, lat: 25.8,  label: 'Miami'       },
-  'Seattle':    { lon:-122.3, lat: 47.6,  label: 'Seattle'     },
-  'Vancouver':  { lon:-123.1, lat: 49.3,  label: 'Vancouver'   },
-  'Valparaiso': { lon: -71.6, lat:-33.0,  label: 'Valparaiso'  },
-  'Callao':     { lon: -77.1, lat:-12.1,  label: 'Callao'      },
-  'Buenos_Aires':{lon: -58.4, lat:-34.6,  label: 'Buenos Aires'},
-  'Felixstowe': { lon:   1.3, lat: 51.9,  label: 'Felixstowe'  },
-  'Algeciras':  { lon:  -5.4, lat: 36.1,  label: 'Algeciras'   },
-  'Valencia':   { lon:  -0.4, lat: 39.5,  label: 'Valencia'    },
-  'Genoa':      { lon:   8.9, lat: 44.4,  label: 'Genoa'       },
-  'Alexandria': { lon:  29.9, lat: 31.2,  label: 'Alexandria'  },
-  'Cape_Town':  { lon:  18.4, lat:-33.9,  label: 'Cape Town'   },
-  'Vladivostok':{ lon: 131.8, lat: 43.1,  label: 'Vladivostok' },
-  'St_Petersburg':{lon: 30.3, lat: 59.9,  label: 'St. Petersburg'},
-  'Auckland':   { lon: 174.7, lat:-36.8,  label: 'Auckland'    },
+  'Shanghai': { lon: 121.5, lat: 31.2, label: 'Shanghai' },
+  'Singapore': { lon: 103.8, lat: 1.4, label: 'Singapore' },
+  'Rotterdam': { lon: 4.5, lat: 51.9, label: 'Rotterdam' },
+  'Dubai': { lon: 55.3, lat: 25.2, label: 'Dubai' },
+  'Mumbai': { lon: 72.8, lat: 18.9, label: 'Mumbai' },
+  'Colombo': { lon: 79.9, lat: 6.9, label: 'Colombo' },
+  'Busan': { lon: 129.1, lat: 35.2, label: 'Busan' },
+  'Hong_Kong': { lon: 114.2, lat: 22.3, label: 'Hong Kong' },
+  'Hamburg': { lon: 10.0, lat: 53.6, label: 'Hamburg' },
+  'Antwerp': { lon: 4.4, lat: 51.2, label: 'Antwerp' },
+  'Piraeus': { lon: 23.6, lat: 37.9, label: 'Piraeus' },
+  'Karachi': { lon: 67.0, lat: 24.9, label: 'Karachi' },
+  'Djibouti': { lon: 43.1, lat: 11.6, label: 'Djibouti' },
+  'Port_Klang': { lon: 101.4, lat: 3.0, label: 'Port Klang' },
+  'Los_Angeles': { lon: -118.2, lat: 34.1, label: 'Los Angeles' },
+  'New_York': { lon: -74.0, lat: 40.7, label: 'New York' },
+  'Santos': { lon: -46.3, lat: -24.0, label: 'Santos' },
+  'Sydney': { lon: 151.2, lat: -33.9, label: 'Sydney' },
+  'Melbourne': { lon: 145.0, lat: -37.8, label: 'Melbourne' },
+  'Tokyo': { lon: 139.7, lat: 35.7, label: 'Tokyo' },
+  'Yokohama': { lon: 139.6, lat: 35.4, label: 'Yokohama' },
+  'Shenzhen': { lon: 114.1, lat: 22.5, label: 'Shenzhen' },
+  'Ningbo': { lon: 121.5, lat: 29.9, label: 'Ningbo' },
+  'Qingdao': { lon: 120.3, lat: 36.1, label: 'Qingdao' },
+  'Kaohsiung': { lon: 120.3, lat: 22.6, label: 'Kaohsiung' },
+  'Houston': { lon: -95.4, lat: 29.8, label: 'Houston' },
+  'Savannah': { lon: -81.1, lat: 32.1, label: 'Savannah' },
+  'Miami': { lon: -80.2, lat: 25.8, label: 'Miami' },
+  'Seattle': { lon: -122.3, lat: 47.6, label: 'Seattle' },
+  'Vancouver': { lon: -123.1, lat: 49.3, label: 'Vancouver' },
+  'Valparaiso': { lon: -71.6, lat: -33.0, label: 'Valparaiso' },
+  'Callao': { lon: -77.1, lat: -12.1, label: 'Callao' },
+  'Buenos_Aires': { lon: -58.4, lat: -34.6, label: 'Buenos Aires' },
+  'Felixstowe': { lon: 1.3, lat: 51.9, label: 'Felixstowe' },
+  'Algeciras': { lon: -5.4, lat: 36.1, label: 'Algeciras' },
+  'Valencia': { lon: -0.4, lat: 39.5, label: 'Valencia' },
+  'Genoa': { lon: 8.9, lat: 44.4, label: 'Genoa' },
+  'Alexandria': { lon: 29.9, lat: 31.2, label: 'Alexandria' },
+  'Cape_Town': { lon: 18.4, lat: -33.9, label: 'Cape Town' },
+  'Vladivostok': { lon: 131.8, lat: 43.1, label: 'Vladivostok' },
+  'St_Petersburg': { lon: 30.3, lat: 59.9, label: 'St. Petersburg' },
+  'Auckland': { lon: 174.7, lat: -36.8, label: 'Auckland' },
 }
 
 // True Web Mercator Projection (Industry Standard - Same as Google Maps)
@@ -75,22 +75,23 @@ interface Props {
   shipments: Shipment[]
   simulationResult?: SimulationResult | null
   activeScenario?: { blocked: string[]; restricted: string[] }
+  cascadeEffects?: CascadePort[]
 }
 
-export default function WorldMap({ shipments, simulationResult, activeScenario }: Props) {
-  const canvasRef  = useRef<HTMLCanvasElement>(null)
-  const wrapRef    = useRef<HTMLDivElement>(null)
-  
+export default function WorldMap({ shipments, simulationResult, activeScenario, cascadeEffects }: Props) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const wrapRef = useRef<HTMLDivElement>(null)
+
   const [geoData, setGeoData] = useState<any>(null)
-  const zoom       = useRef(1)
-  const pan        = useRef({ x: 0, y: 0 })
-  const dragging   = useRef(false)
-  const lastMouse  = useRef({ x: 0, y: 0 })
-  const shipRef    = useRef<Shipment[]>([])
+  const zoom = useRef(1)
+  const pan = useRef({ x: 0, y: 0 })
+  const dragging = useRef(false)
+  const lastMouse = useRef({ x: 0, y: 0 })
+  const shipRef = useRef<Shipment[]>([])
   const routeIdxRef = useRef<Record<string, number>>({})
-  const timeRef    = useRef(0)
-  const reqRef     = useRef<number>(0)
-  const mousePos   = useRef({ x: -1000, y: -1000 })
+  const timeRef = useRef(0)
+  const reqRef = useRef<number>(0)
+  const mousePos = useRef({ x: -1000, y: -1000 })
   const [tooltip, setTooltip] = useState<{
     x: number; y: number;
     vessel: string; status: string;
@@ -99,7 +100,7 @@ export default function WorldMap({ shipments, simulationResult, activeScenario }
     etaDays: number; speed: string;
   } | null>(null)
   const tooltipRef = useRef(tooltip)
-  
+
   shipRef.current = shipments
   tooltipRef.current = tooltip
 
@@ -124,9 +125,9 @@ export default function WorldMap({ shipments, simulationResult, activeScenario }
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current
-    const wrap   = wrapRef.current
+    const wrap = wrapRef.current
     if (!canvas || !wrap) return
-    
+
     const dpr = window.devicePixelRatio || 1
     const rect = wrap.getBoundingClientRect()
     const cw = rect.width
@@ -143,7 +144,7 @@ export default function WorldMap({ shipments, simulationResult, activeScenario }
     ctx.clearRect(0, 0, cw, ch)
 
     // Deep water color
-    ctx.fillStyle = '#f8fafc' 
+    ctx.fillStyle = '#f8fafc'
     ctx.fillRect(0, 0, cw, ch)
 
     if (!geoData) {
@@ -204,129 +205,122 @@ export default function WorldMap({ shipments, simulationResult, activeScenario }
       }
     })
 
-      // --- 4. Draw Sleek, Tight Routes ---
-      const isSimulation = !!simulationResult
-      const allAffected = simulationResult ? [...simulationResult.affected_vessels, ...simulationResult.exposed_vessels] : []
+    // --- 4. Draw Sleek, Tight Routes ---
+    const isSimulation = !!simulationResult
+    const allAffected = simulationResult ? [...simulationResult.affected_vessels, ...simulationResult.exposed_vessels] : []
 
-      const sorted = [...shipRef.current].sort((a, b) => a.risk_score - b.risk_score)
-      const activePorts = new Set<string>()
-      let newTooltip: typeof tooltip = null
+    const sorted = [...shipRef.current].sort((a, b) => a.risk_score - b.risk_score)
+    const activePorts = new Set<string>()
+    let newTooltip: typeof tooltip = null
 
-      sorted.forEach((s) => {
-        const o = PORT_DATA[s.origin]
-        const d = PORT_DATA[s.destination]
-        if (!o || !d) return
+    sorted.forEach((s) => {
+      const o = PORT_DATA[s.origin]
+      const d = PORT_DATA[s.destination]
+      if (!o || !d) return
 
-        activePorts.add(s.origin)
-        activePorts.add(s.destination)
+      activePorts.add(s.origin)
+      activePorts.add(s.destination)
 
-        const [ox, oy] = getPos(o.lon, o.lat)
-        const [dx, dy] = getPos(d.lon, d.lat)
+      const [ox, oy] = getPos(o.lon, o.lat)
+      const [dx, dy] = getPos(d.lon, d.lat)
 
-        // Find if this vessel is part of the simulation results
-        const simVessel = allAffected.find(v => v.shipment_id === s.id)
+      // Find if this vessel is part of the simulation results
+      const simVessel = allAffected.find(v => v.shipment_id === s.id)
 
-        const ddx = dx - ox, ddy = dy - oy
-        const len = Math.hypot(ddx, ddy) || 1
-        const normX = ddx / len, normY = ddy / len
-        const perpX = -normY, perpY = normX
+      const ddx = dx - ox, ddy = dy - oy
+      const len = Math.hypot(ddx, ddy) || 1
+      const normX = ddx / len, normY = ddy / len
+      const perpX = -normY, perpY = normX
 
-        const routeIdx = routeIdxRef.current[s.id] ?? 0
-        const totalForPair = shipRef.current.filter(x => x.origin === s.origin && x.destination === s.destination).length
-        const offsetAmt = totalForPair > 1 ? (routeIdx - (totalForPair - 1) / 2) * (12 * zoom.current) : 0
+      const routeIdx = routeIdxRef.current[s.id] ?? 0
+      const totalForPair = shipRef.current.filter(x => x.origin === s.origin && x.destination === s.destination).length
+      const offsetAmt = totalForPair > 1 ? (routeIdx - (totalForPair - 1) / 2) * (12 * zoom.current) : 0
 
-        const sox = ox, soy = oy, sdx = dx, sdy = dy
-        const midX = (ox + dx) / 2, midY = (oy + dy) / 2
+      const sox = ox, soy = oy, sdx = dx, sdy = dy
+      const midX = (ox + dx) / 2, midY = (oy + dy) / 2
 
-        const curvature = len * 0.15
-        const cx = midX + perpX * (curvature + offsetAmt)
-        const cy = midY + perpY * (curvature + offsetAmt)
+      const curvature = len * 0.15
+      const cx = midX + perpX * (curvature + offsetAmt)
+      const cy = midY + perpY * (curvature + offsetAmt)
 
-        let color = '#10b981'
-        let dash  = false
-        let label = ''
+      let color = '#10b981'
+      let dash = false
 
-        if (isSimulation && simVessel) {
-          if (simVessel.status === 'exposed') {
-            color = '#991b1b' // Deep red
-            dash  = true
-            label = 'EXPOSED'
-          } else {
-            color = '#3b82f6' // Blue for rerouted
-            label = 'REROUTED'
-          }
+      if (isSimulation && simVessel) {
+        if (simVessel.status === 'exposed') {
+          color = '#991b1b' // Deep red
+          dash = true
         } else {
-          if (s.risk_score >= 0.70) { color = '#ef4444'; dash = true }
-          else if (s.risk_score >= 0.45) color = '#f59e0b'
+          color = '#3b82f6' // Blue for reroutable
         }
+      } else if (isSimulation && !simVessel) {
+        // In simulation mode, skip unaffected vessels entirely — no green clutter
+        return
+      } else {
+        if (s.risk_score >= 0.70) { color = '#ef4444'; dash = true }
+        else if (s.risk_score >= 0.45) color = '#f59e0b'
+      }
 
-        ctx.beginPath()
-        ctx.moveTo(sox, soy)
-        ctx.quadraticCurveTo(cx, cy, sdx, sdy)
+      ctx.beginPath()
+      ctx.moveTo(sox, soy)
+      ctx.quadraticCurveTo(cx, cy, sdx, sdy)
 
-        ctx.strokeStyle = color
-        ctx.lineWidth   = (simVessel || s.risk_score >= 0.70) ? 2.5 : 1.5
-        ctx.globalAlpha = 0.9
+      ctx.strokeStyle = color
+      ctx.lineWidth = (simVessel || s.risk_score >= 0.70) ? 2.5 : 1.5
+      ctx.globalAlpha = 0.9
 
-        if (dash) {
-          ctx.setLineDash([6, 6])
-          ctx.lineDashOffset = -timeRef.current * 0.4
-        } else {
-          ctx.setLineDash([])
-        }
-        ctx.stroke()
-
-        // Draw label on route midpoint if simulation is active
-        if (isSimulation && simVessel && label) {
-          ctx.font = '8px font-bold sans-serif'
-          ctx.fillStyle = color
-          ctx.fillText(label, cx, cy)
-        }
-
+      if (dash) {
+        ctx.setLineDash([6, 6])
+        ctx.lineDashOffset = -timeRef.current * 0.4
+      } else {
         ctx.setLineDash([])
-        ctx.globalAlpha = 1
+      }
+      ctx.stroke()
+
+      ctx.setLineDash([])
+      ctx.globalAlpha = 1
 
       // --- AIS Vessel Tracking ---
       // seed t from departure_time so each vessel has a unique, realistic position
-      const depMs     = new Date(s.departure_time).getTime()
-      const nowMs     = Date.now()
+      const depMs = new Date(s.departure_time).getTime()
+      const nowMs = Date.now()
       const seaSpeedKnots = s.risk_score >= 0.70 ? 10 : 14  // Slower when at-risk
-      const routeKm   = 15000  // proxy; real distance tracked via route data
+      const routeKm = 15000  // proxy; real distance tracked via route data
       const transitMs = (routeKm / (seaSpeedKnots * 1.852)) * 3600 * 1000
-      const elapsed   = Math.max(0, nowMs - depMs)
-      const baseT     = Math.min(elapsed / transitMs, 0.99)
-      
+      const elapsed = Math.max(0, nowMs - depMs)
+      const baseT = Math.min(elapsed / transitMs, 0.99)
+
       // Overlay a slow animation tick on top of the realistic base position
       const animSpeed = 0.00015
-      const animT     = (baseT + timeRef.current * animSpeed) % 1
+      const animT = (baseT + timeRef.current * animSpeed) % 1
       const t = animT
 
-      const shipX = (1-t)*(1-t)*sox + 2*(1-t)*t*cx + t*t*sdx
-      const shipY = (1-t)*(1-t)*soy + 2*(1-t)*t*cy + t*t*sdy
-      
+      const shipX = (1 - t) * (1 - t) * sox + 2 * (1 - t) * t * cx + t * t * sdx
+      const shipY = (1 - t) * (1 - t) * soy + 2 * (1 - t) * t * cy + t * t * sdy
+
       // Compute heading direction from bezier tangent
       const dt = 0.01
       const t2 = Math.min(t + dt, 0.99)
-      const nx = (1-t2)*(1-t2)*sox + 2*(1-t2)*t2*cx + t2*t2*sdx
-      const ny = (1-t2)*(1-t2)*soy + 2*(1-t2)*t2*cy + t2*t2*sdy
+      const nx = (1 - t2) * (1 - t2) * sox + 2 * (1 - t2) * t2 * cx + t2 * t2 * sdx
+      const ny = (1 - t2) * (1 - t2) * soy + 2 * (1 - t2) * t2 * cy + t2 * t2 * sdy
       const angle = Math.atan2(ny - shipY, nx - shipX)
 
       const vesselSize = 3 * Math.min(zoom.current, 2)
-      
+
       // Check if mouse is hovering this vessel
       const isVesselHovered = Math.hypot(shipX - mousePos.current.x, shipY - mousePos.current.y) < 12
-      
+
       // Draw vessel body: arrow shape
       ctx.save()
       ctx.translate(shipX, shipY)
       ctx.rotate(angle)
-      
+
       // Outer glow for at-risk vessels
       if (s.risk_score >= 0.70 || isVesselHovered || (isSimulation && simVessel)) {
         ctx.shadowColor = (isSimulation && simVessel) ? color : color
-        ctx.shadowBlur  = isVesselHovered ? 12 : 6
+        ctx.shadowBlur = isVesselHovered ? 12 : 6
       }
-      
+
       if (isSimulation && simVessel) {
         // Additional pulsing ring for affected vessels in simulation
         const pulse = (Math.sin(timeRef.current * 0.1) + 1) / 2
@@ -338,7 +332,7 @@ export default function WorldMap({ shipments, simulationResult, activeScenario }
         ctx.stroke()
         ctx.globalAlpha = 1
       }
-      
+
       ctx.beginPath()
       ctx.moveTo(vesselSize * 1.8, 0)              // nose
       ctx.lineTo(-vesselSize, vesselSize * 0.7)    // stern-port
@@ -352,7 +346,7 @@ export default function WorldMap({ shipments, simulationResult, activeScenario }
       ctx.stroke()
       ctx.shadowBlur = 0
       ctx.restore()
-      
+
       // Store hover data
       if (isVesselHovered) {
         const etaDays = Math.max(0, Math.round((1 - t) * (transitMs / 86400000)))
@@ -392,12 +386,12 @@ export default function WorldMap({ shipments, simulationResult, activeScenario }
       if (hasHigh) {
         const pulse = (Math.sin(timeRef.current * 0.05) + 1) / 2
         ctx.beginPath()
-        ctx.arc(x, y, (4 + pulse * 3) * zoom.current, 0, Math.PI*2)
-        ctx.fillStyle = `rgba(239, 68, 68, ${0.2 * (1-pulse)})`
+        ctx.arc(x, y, (4 + pulse * 3) * zoom.current, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(239, 68, 68, ${0.2 * (1 - pulse)})`
         ctx.fill()
       }
       ctx.beginPath()
-      ctx.arc(x, y, 4 * zoom.current, 0, Math.PI*2)
+      ctx.arc(x, y, 4 * zoom.current, 0, Math.PI * 2)
       ctx.fillStyle = '#ffffff'
       ctx.fill()
       ctx.lineWidth = 2
@@ -421,26 +415,90 @@ export default function WorldMap({ shipments, simulationResult, activeScenario }
 
     sortedLabels.forEach(({ port, x, y, hasHigh, isHovered }) => {
       if (!isHovered && !hasHigh && zoom.current < 2.5) return
-      
+
       const width = ctx.measureText(port.label).width
       const box = { l: x + 4, r: x + 8 + width, t: y - 10, b: y + 6 }
-      
-      const collision = drawnLabels.some(b => 
+
+      const collision = drawnLabels.some(b =>
         !(box.r < b.l || box.l > b.r || box.b < b.t || box.t > b.b)
       )
-      
+
       // Hovered labels bypass collision to guarantee visibility
       if (!collision || isHovered) {
         // Draw crisp text background to mask crossing lines
         ctx.fillStyle = 'rgba(248, 250, 252, 0.8)'
         ctx.fillRect(box.l, box.t, box.r - box.l, box.b - box.t)
-        
+
         ctx.fillStyle = '#0f172a'
         ctx.fillText(port.label, x + 6, y + 4)
         drawnLabels.push(box)
       }
     })
-  }, [geoData, setTooltip])
+
+    // --- 6. Cascade effect port indicators ---
+    if (cascadeEffects && cascadeEffects.length > 0) {
+      const pulse = (Math.sin(timeRef.current * 0.07) + 1) / 2
+      cascadeEffects.forEach(cascade => {
+        const port = PORT_DATA[cascade.port]
+        if (!port) return
+        const [x, y] = getPos(port.lon, port.lat)
+        const ringColor = cascade.alert_level === 'high' ? '#dc2626' : '#d97706'
+
+        // Pulsing outer warning ring
+        ctx.beginPath()
+        ctx.arc(x, y, 12 + pulse * 4, 0, Math.PI * 2)
+        ctx.strokeStyle = ringColor
+        ctx.lineWidth = 1.5
+        ctx.globalAlpha = 0.35 * (1 - pulse * 0.5)
+        ctx.stroke()
+
+        // Static inner ring
+        ctx.beginPath()
+        ctx.arc(x, y, 10, 0, Math.PI * 2)
+        ctx.strokeStyle = ringColor
+        ctx.lineWidth = 1.5
+        ctx.globalAlpha = 0.7
+        ctx.stroke()
+        ctx.globalAlpha = 1
+
+        // Inner filled dot
+        ctx.beginPath()
+        ctx.arc(x, y, 5, 0, Math.PI * 2)
+        ctx.fillStyle = ringColor
+        ctx.fill()
+
+        // Check hover for cascade tooltip
+        const isPortHovered = Math.hypot(x - mousePos.current.x, y - mousePos.current.y) < 15
+        if (isPortHovered && newTooltip === null) {
+          const count = shipRef.current.filter(
+            s => s.destination === cascade.port || s.origin === cascade.port
+          ).length
+          // Draw an inlined text tooltip via canvas (not the vessel tooltip)
+          const lines = [
+            port.label,
+            `${count} active shipment${count !== 1 ? 's' : ''}`,
+            `⚠ +${cascade.congestion_increase_pct}% projected congestion`,
+            `${cascade.rerouted_vessels} rerouted vessels incoming`,
+          ]
+          const tw = 210
+          const th = lines.length * 16 + 10
+          const tx = Math.min(x + 14, cw - tw - 8)
+          const ty = Math.max(y - th - 4, 4)
+          ctx.fillStyle = 'rgba(15,23,42,0.93)'
+          ctx.beginPath()
+          ctx.roundRect(tx, ty, tw, th, 8)
+          ctx.fill()
+          ctx.fillStyle = '#ffffff'
+          ctx.font = '600 10px sans-serif'
+          ctx.fillText(lines[0], tx + 10, ty + 14)
+          ctx.fillStyle = '#94a3b8'
+          ctx.font = '400 9px sans-serif'
+          lines.slice(1).forEach((line, i) => ctx.fillText(line, tx + 10, ty + 26 + i * 13))
+          ctx.font = `600 ${Math.max(10, Math.min(12, 11 * zoom.current))}px "Inter", -apple-system, sans-serif`
+        }
+      })
+    }
+  }, [geoData, setTooltip, cascadeEffects])
 
   useEffect(() => {
     function loop() {
@@ -458,7 +516,7 @@ export default function WorldMap({ shipments, simulationResult, activeScenario }
     const mx = e.clientX - rect.left
     const my = e.clientY - rect.top
     mousePos.current = { x: mx, y: my }
-    
+
     if (dragging.current) {
       pan.current.x += (mx - lastMouse.current.x) / zoom.current
       pan.current.y += (my - lastMouse.current.y) / zoom.current
@@ -467,7 +525,7 @@ export default function WorldMap({ shipments, simulationResult, activeScenario }
   }, [])
 
   const onMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    dragging.current  = true
+    dragging.current = true
     const rect = canvasRef.current!.getBoundingClientRect()
     lastMouse.current = { x: e.clientX - rect.left, y: e.clientY - rect.top }
   }, [])
@@ -495,26 +553,24 @@ export default function WorldMap({ shipments, simulationResult, activeScenario }
           className="absolute z-30 pointer-events-none"
           style={{
             left: Math.min(tooltip.x + 14, 999),
-            top:  Math.max(tooltip.y - 80, 4),
+            top: Math.max(tooltip.y - 80, 4),
           }}
         >
           <div className="bg-slate-900/95 backdrop-blur-sm text-white rounded-xl shadow-xl border border-slate-700 px-3 py-2.5 min-w-[200px]">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-bold tracking-wide text-white">{tooltip.vessel}</span>
-              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-                tooltip.risk >= 0.70 ? 'bg-red-500/30 text-red-300'
-                : tooltip.risk >= 0.45 ? 'bg-amber-500/30 text-amber-300'
-                : 'bg-emerald-500/30 text-emerald-300'
-              }`}>
+              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${tooltip.risk >= 0.70 ? 'bg-red-500/30 text-red-300'
+                  : tooltip.risk >= 0.45 ? 'bg-amber-500/30 text-amber-300'
+                    : 'bg-emerald-500/30 text-emerald-300'
+                }`}>
                 {tooltip.status.replace('_', ' ').toUpperCase()}
               </span>
             </div>
             <div className="text-[10px] text-slate-400 mb-2">{tooltip.origin} - {tooltip.dest}</div>
             <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px]">
               <span className="text-slate-400">Risk</span>
-              <span className={`font-semibold ${
-                tooltip.risk >= 0.70 ? 'text-red-400' : tooltip.risk >= 0.45 ? 'text-amber-400' : 'text-emerald-400'
-              }`}>{Math.round(tooltip.risk * 100)}%</span>
+              <span className={`font-semibold ${tooltip.risk >= 0.70 ? 'text-red-400' : tooltip.risk >= 0.45 ? 'text-amber-400' : 'text-emerald-400'
+                }`}>{Math.round(tooltip.risk * 100)}%</span>
               <span className="text-slate-400">ETA</span>
               <span className="text-white font-medium">{tooltip.etaDays}d remaining</span>
               {tooltip.delay > 0 && <>

@@ -9,6 +9,9 @@ export interface Shipment {
   anomaly_flag: boolean
   status: 'on_time' | 'watch' | 'at_risk' | 'delivered'
   updated_at: string
+  cargo_type?: string
+  cargo_value_usd?: number
+  daily_delay_cost_usd?: number
 }
 
 export interface Route {
@@ -55,6 +58,12 @@ export interface Prediction {
 
 export interface Explanation {
   gemini_explanation: string
+  structured?: {
+    situation: string
+    risk_driver: string
+    recommendation: string
+    confidence: 'high' | 'medium' | 'low'
+  }
   risk_drivers: { factor: string; impact: number; direction: string }[]
   risk_level: string
   risk_percentage: string
@@ -72,7 +81,7 @@ export interface PredictResponse {
   constraint_snapshot: Record<string, string>
 }
 
-// -- War Room / Scenario Engine ------------------------------------------------
+// -- Risk Simulation / Scenario Engine ------------------------------------------
 export interface AffectedVessel {
   shipment_id: string
   origin: string
@@ -84,6 +93,14 @@ export interface AffectedVessel {
   co2_delta_tonnes: number
   risk_score: number
   status: 'reroutable' | 'exposed'
+}
+
+export interface CascadePort {
+  port:                    string
+  rerouted_vessels:        number
+  congestion_increase_pct: number
+  alert_level:             'high' | 'medium'
+  message:                 string
 }
 
 export interface SimulationResult {
@@ -98,4 +115,5 @@ export interface SimulationResult {
   affected_vessels: AffectedVessel[]
   exposed_vessels: AffectedVessel[]
   gemini_brief: string
+  cascade_effects: CascadePort[]
 }
