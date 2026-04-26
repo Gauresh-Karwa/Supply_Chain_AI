@@ -1,0 +1,1776 @@
+[
+  {
+    "id": "1ee5eebe-4aa9-429c-a12b-91855ac9fe40",
+    "origin": "Shanghai",
+    "destination": "Rotterdam",
+    "waypoints": [
+      "Port_Klang",
+      "Colombo",
+      "Djibouti",
+      "Suez_Canal",
+      "Port_Said",
+      "Piraeus",
+      "Rotterdam"
+    ],
+    "distance_km": 19500,
+    "base_time_hrs": 528,
+    "transport_mode": "sea",
+    "reliability_score": 0.74,
+    "cost_estimate": 0.72,
+    "passes_through": [
+      "taiwan_strait",
+      "malacca_strait",
+      "indian_ocean",
+      "bab_el_mandeb",
+      "suez_canal",
+      "mediterranean_sea",
+      "strait_of_gibraltar"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "fc3f3795-6a3d-4755-ae0a-c7fe7adca70f",
+    "origin": "Shanghai",
+    "destination": "Rotterdam",
+    "waypoints": [
+      "Singapore",
+      "Colombo",
+      "Cape_of_Good_Hope",
+      "Las_Palmas",
+      "Rotterdam"
+    ],
+    "distance_km": 24800,
+    "base_time_hrs": 696,
+    "transport_mode": "sea",
+    "reliability_score": 0.88,
+    "cost_estimate": 0.68,
+    "passes_through": [
+      "south_china_sea",
+      "malacca_strait",
+      "indian_ocean",
+      "cape_of_good_hope",
+      "atlantic_ocean"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "c40e83da-0136-40da-a3cf-21189d6425c1",
+    "origin": "Singapore",
+    "destination": "Rotterdam",
+    "waypoints": [
+      "Colombo",
+      "Djibouti",
+      "Suez_Canal",
+      "Piraeus",
+      "Rotterdam"
+    ],
+    "distance_km": 15600,
+    "base_time_hrs": 432,
+    "transport_mode": "sea",
+    "reliability_score": 0.75,
+    "cost_estimate": 0.7,
+    "passes_through": [
+      "malacca_strait",
+      "indian_ocean",
+      "bab_el_mandeb",
+      "suez_canal",
+      "mediterranean_sea"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "e33e97a1-3f9d-4df0-b653-b3fd318c02e7",
+    "origin": "Singapore",
+    "destination": "Rotterdam",
+    "waypoints": [
+      "Colombo",
+      "Cape_of_Good_Hope",
+      "Rotterdam"
+    ],
+    "distance_km": 21400,
+    "base_time_hrs": 624,
+    "transport_mode": "sea",
+    "reliability_score": 0.87,
+    "cost_estimate": 0.65,
+    "passes_through": [
+      "malacca_strait",
+      "indian_ocean",
+      "cape_of_good_hope",
+      "atlantic_ocean"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "b63389b6-e675-4f9e-9572-ee0b2ef68012",
+    "origin": "Busan",
+    "destination": "Rotterdam",
+    "waypoints": [
+      "Shanghai",
+      "Port_Klang",
+      "Colombo",
+      "Suez_Canal",
+      "Piraeus",
+      "Rotterdam"
+    ],
+    "distance_km": 20800,
+    "base_time_hrs": 552,
+    "transport_mode": "sea",
+    "reliability_score": 0.73,
+    "cost_estimate": 0.74,
+    "passes_through": [
+      "east_china_sea",
+      "taiwan_strait",
+      "south_china_sea",
+      "malacca_strait",
+      "bab_el_mandeb",
+      "suez_canal",
+      "mediterranean_sea"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "5f8d2318-eaae-4bf9-b1c9-aa7ec715c312",
+    "origin": "Mumbai",
+    "destination": "Rotterdam",
+    "waypoints": [
+      "Colombo",
+      "Djibouti",
+      "Suez_Canal",
+      "Piraeus",
+      "Rotterdam"
+    ],
+    "distance_km": 11200,
+    "base_time_hrs": 384,
+    "transport_mode": "sea",
+    "reliability_score": 0.76,
+    "cost_estimate": 0.68,
+    "passes_through": [
+      "arabian_sea",
+      "bab_el_mandeb",
+      "suez_canal",
+      "mediterranean_sea"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "74ca0ccc-488b-4c61-b1bf-7cf5d67ea525",
+    "origin": "Mumbai",
+    "destination": "Rotterdam",
+    "waypoints": [
+      "Cape_of_Good_Hope",
+      "Las_Palmas",
+      "Rotterdam"
+    ],
+    "distance_km": 19800,
+    "base_time_hrs": 576,
+    "transport_mode": "sea",
+    "reliability_score": 0.89,
+    "cost_estimate": 0.62,
+    "passes_through": [
+      "arabian_sea",
+      "indian_ocean",
+      "cape_of_good_hope",
+      "atlantic_ocean"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "04949776-ee0c-4e13-bb51-c60da854edb0",
+    "origin": "Shanghai",
+    "destination": "Dubai",
+    "waypoints": [
+      "Singapore",
+      "Port_Klang",
+      "Colombo",
+      "Hormuz_Strait",
+      "Dubai"
+    ],
+    "distance_km": 9800,
+    "base_time_hrs": 360,
+    "transport_mode": "sea",
+    "reliability_score": 0.77,
+    "cost_estimate": 0.66,
+    "passes_through": [
+      "south_china_sea",
+      "malacca_strait",
+      "indian_ocean",
+      "arabian_sea",
+      "hormuz_strait"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "fafb0d3a-c878-4cd0-a556-2d2feedac7df",
+    "origin": "Shanghai",
+    "destination": "Dubai",
+    "waypoints": [
+      "Singapore",
+      "Colombo",
+      "Salalah",
+      "Dubai"
+    ],
+    "distance_km": 10400,
+    "base_time_hrs": 408,
+    "transport_mode": "sea",
+    "reliability_score": 0.84,
+    "cost_estimate": 0.71,
+    "passes_through": [
+      "south_china_sea",
+      "malacca_strait",
+      "indian_ocean",
+      "arabian_sea"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "cb078183-a7a6-4108-8587-53236614444d",
+    "origin": "Mumbai",
+    "destination": "Dubai",
+    "waypoints": [
+      "Hormuz_Strait",
+      "Dubai"
+    ],
+    "distance_km": 1970,
+    "base_time_hrs": 96,
+    "transport_mode": "sea",
+    "reliability_score": 0.78,
+    "cost_estimate": 0.55,
+    "passes_through": [
+      "arabian_sea",
+      "hormuz_strait"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "fa74c4d9-0929-40aa-a7c0-a2da3b1f6b06",
+    "origin": "Mumbai",
+    "destination": "Dubai",
+    "waypoints": [
+      "Salalah",
+      "Muscat",
+      "Dubai"
+    ],
+    "distance_km": 2600,
+    "base_time_hrs": 132,
+    "transport_mode": "sea",
+    "reliability_score": 0.86,
+    "cost_estimate": 0.6,
+    "passes_through": [
+      "arabian_sea"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "b6ae2990-7064-42c5-881f-b478a18aae12",
+    "origin": "Colombo",
+    "destination": "Dubai",
+    "waypoints": [
+      "Hormuz_Strait",
+      "Dubai"
+    ],
+    "distance_km": 2800,
+    "base_time_hrs": 120,
+    "transport_mode": "sea",
+    "reliability_score": 0.79,
+    "cost_estimate": 0.54,
+    "passes_through": [
+      "arabian_sea",
+      "hormuz_strait"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "52b3d7ec-e171-4984-9141-56a08c73b7a7",
+    "origin": "Rotterdam",
+    "destination": "Dubai",
+    "waypoints": [
+      "Piraeus",
+      "Suez_Canal",
+      "Djibouti",
+      "Hormuz_Strait",
+      "Dubai"
+    ],
+    "distance_km": 12400,
+    "base_time_hrs": 432,
+    "transport_mode": "sea",
+    "reliability_score": 0.73,
+    "cost_estimate": 0.73,
+    "passes_through": [
+      "north_sea",
+      "strait_of_gibraltar",
+      "mediterranean_sea",
+      "suez_canal",
+      "bab_el_mandeb",
+      "arabian_sea",
+      "hormuz_strait"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "5926bdc0-2845-4c28-b8ae-75a2a3083161",
+    "origin": "Shanghai",
+    "destination": "Singapore",
+    "waypoints": [
+      "Hong_Kong",
+      "Port_Klang",
+      "Singapore"
+    ],
+    "distance_km": 3300,
+    "base_time_hrs": 120,
+    "transport_mode": "sea",
+    "reliability_score": 0.83,
+    "cost_estimate": 0.5,
+    "passes_through": [
+      "east_china_sea",
+      "south_china_sea",
+      "taiwan_strait"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "19717c09-81e9-439e-9f4e-75b18c0518e5",
+    "origin": "Shanghai",
+    "destination": "Singapore",
+    "waypoints": [
+      "Taiwan_Strait",
+      "Hong_Kong",
+      "Singapore"
+    ],
+    "distance_km": 3100,
+    "base_time_hrs": 108,
+    "transport_mode": "sea",
+    "reliability_score": 0.76,
+    "cost_estimate": 0.48,
+    "passes_through": [
+      "east_china_sea",
+      "taiwan_strait",
+      "south_china_sea"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "12b7f568-9ad4-4cf2-871b-6949fb95782b",
+    "origin": "Busan",
+    "destination": "Singapore",
+    "waypoints": [
+      "Shanghai",
+      "Hong_Kong",
+      "Singapore"
+    ],
+    "distance_km": 4800,
+    "base_time_hrs": 168,
+    "transport_mode": "sea",
+    "reliability_score": 0.82,
+    "cost_estimate": 0.53,
+    "passes_through": [
+      "east_china_sea",
+      "south_china_sea"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "51e742e9-3063-4bf6-ac43-957e28ae0f65",
+    "origin": "Mumbai",
+    "destination": "Singapore",
+    "waypoints": [
+      "Colombo",
+      "Port_Klang",
+      "Singapore"
+    ],
+    "distance_km": 3900,
+    "base_time_hrs": 168,
+    "transport_mode": "sea",
+    "reliability_score": 0.8,
+    "cost_estimate": 0.52,
+    "passes_through": [
+      "arabian_sea",
+      "indian_ocean",
+      "malacca_strait"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "178f74e1-9662-430b-acbd-5a2098ad8d87",
+    "origin": "Colombo",
+    "destination": "Singapore",
+    "waypoints": [
+      "Port_Klang",
+      "Singapore"
+    ],
+    "distance_km": 2400,
+    "base_time_hrs": 96,
+    "transport_mode": "sea",
+    "reliability_score": 0.84,
+    "cost_estimate": 0.45,
+    "passes_through": [
+      "indian_ocean",
+      "malacca_strait"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "4808f566-65d9-41f8-a248-020ca02900ed",
+    "origin": "Busan",
+    "destination": "Shanghai",
+    "waypoints": [
+      "East_China_Sea",
+      "Shanghai"
+    ],
+    "distance_km": 890,
+    "base_time_hrs": 36,
+    "transport_mode": "sea",
+    "reliability_score": 0.9,
+    "cost_estimate": 0.28,
+    "passes_through": [
+      "east_china_sea"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "c2978712-00a9-4d67-9cbd-bef692311261",
+    "origin": "Hong_Kong",
+    "destination": "Singapore",
+    "waypoints": [
+      "South_China_Sea",
+      "Singapore"
+    ],
+    "distance_km": 2600,
+    "base_time_hrs": 96,
+    "transport_mode": "sea",
+    "reliability_score": 0.81,
+    "cost_estimate": 0.46,
+    "passes_through": [
+      "south_china_sea"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "95a53dc2-d3c8-4b38-9226-266394611622",
+    "origin": "Mumbai",
+    "destination": "Colombo",
+    "waypoints": [
+      "Arabian_Sea_crossing",
+      "Colombo"
+    ],
+    "distance_km": 1200,
+    "base_time_hrs": 60,
+    "transport_mode": "sea",
+    "reliability_score": 0.88,
+    "cost_estimate": 0.32,
+    "passes_through": [
+      "arabian_sea",
+      "indian_ocean"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "f07bce1b-a91b-4ebb-821e-d2ff8b74f562",
+    "origin": "Colombo",
+    "destination": "Rotterdam",
+    "waypoints": [
+      "Djibouti",
+      "Suez_Canal",
+      "Piraeus",
+      "Rotterdam"
+    ],
+    "distance_km": 10800,
+    "base_time_hrs": 360,
+    "transport_mode": "sea",
+    "reliability_score": 0.77,
+    "cost_estimate": 0.67,
+    "passes_through": [
+      "indian_ocean",
+      "bab_el_mandeb",
+      "suez_canal",
+      "mediterranean_sea"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "1b2ce8aa-1fce-4799-b178-7298cd738e20",
+    "origin": "Colombo",
+    "destination": "Rotterdam",
+    "waypoints": [
+      "Cape_of_Good_Hope",
+      "Rotterdam"
+    ],
+    "distance_km": 18200,
+    "base_time_hrs": 528,
+    "transport_mode": "sea",
+    "reliability_score": 0.9,
+    "cost_estimate": 0.6,
+    "passes_through": [
+      "indian_ocean",
+      "cape_of_good_hope",
+      "atlantic_ocean"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "6da565a9-8194-4c91-bd23-12d60c63273e",
+    "origin": "Karachi",
+    "destination": "Dubai",
+    "waypoints": [
+      "Hormuz_Strait",
+      "Dubai"
+    ],
+    "distance_km": 1100,
+    "base_time_hrs": 60,
+    "transport_mode": "sea",
+    "reliability_score": 0.75,
+    "cost_estimate": 0.4,
+    "passes_through": [
+      "arabian_sea",
+      "hormuz_strait"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "66958909-f805-44db-b80a-ed21851a3898",
+    "origin": "Dubai",
+    "destination": "Rotterdam",
+    "waypoints": [
+      "Hormuz_Strait",
+      "Djibouti",
+      "Suez_Canal",
+      "Piraeus",
+      "Rotterdam"
+    ],
+    "distance_km": 11800,
+    "base_time_hrs": 432,
+    "transport_mode": "sea",
+    "reliability_score": 0.7,
+    "cost_estimate": 0.75,
+    "passes_through": [
+      "hormuz_strait",
+      "arabian_sea",
+      "bab_el_mandeb",
+      "suez_canal",
+      "mediterranean_sea"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "06e0e106-cb39-4c8e-a270-46689897ee7a",
+    "origin": "Dubai",
+    "destination": "Rotterdam",
+    "waypoints": [
+      "Salalah",
+      "Cape_of_Good_Hope",
+      "Rotterdam"
+    ],
+    "distance_km": 22000,
+    "base_time_hrs": 648,
+    "transport_mode": "sea",
+    "reliability_score": 0.91,
+    "cost_estimate": 0.62,
+    "passes_through": [
+      "arabian_sea",
+      "indian_ocean",
+      "cape_of_good_hope",
+      "atlantic_ocean"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "aa6d7027-c36f-4087-8dfe-3058319885b1",
+    "origin": "Piraeus",
+    "destination": "Rotterdam",
+    "waypoints": [
+      "Strait_of_Gibraltar",
+      "Bay_of_Biscay",
+      "Rotterdam"
+    ],
+    "distance_km": 4800,
+    "base_time_hrs": 168,
+    "transport_mode": "sea",
+    "reliability_score": 0.85,
+    "cost_estimate": 0.42,
+    "passes_through": [
+      "mediterranean_sea",
+      "strait_of_gibraltar",
+      "atlantic_ocean"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "0f546c3b-0f83-42cf-9620-d7e375d39260",
+    "origin": "Hamburg",
+    "destination": "Piraeus",
+    "waypoints": [
+      "Rotterdam",
+      "Strait_of_Gibraltar",
+      "Piraeus"
+    ],
+    "distance_km": 5200,
+    "base_time_hrs": 180,
+    "transport_mode": "sea",
+    "reliability_score": 0.86,
+    "cost_estimate": 0.44,
+    "passes_through": [
+      "north_sea",
+      "strait_of_gibraltar",
+      "mediterranean_sea"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "19e52001-9e37-4662-bc3e-d49283f3e6b9",
+    "origin": "Shanghai",
+    "destination": "Hamburg",
+    "waypoints": [
+      "Port_Klang",
+      "Colombo",
+      "Suez_Canal",
+      "Rotterdam",
+      "Hamburg"
+    ],
+    "distance_km": 20100,
+    "base_time_hrs": 552,
+    "transport_mode": "sea",
+    "reliability_score": 0.73,
+    "cost_estimate": 0.76,
+    "passes_through": [
+      "south_china_sea",
+      "malacca_strait",
+      "indian_ocean",
+      "bab_el_mandeb",
+      "suez_canal",
+      "mediterranean_sea",
+      "north_sea"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "518ab08e-01cc-48ab-961c-8d87670d99fe",
+    "origin": "Shanghai",
+    "destination": "Hamburg",
+    "waypoints": [
+      "Singapore",
+      "Cape_of_Good_Hope",
+      "Rotterdam",
+      "Hamburg"
+    ],
+    "distance_km": 25600,
+    "base_time_hrs": 720,
+    "transport_mode": "sea",
+    "reliability_score": 0.87,
+    "cost_estimate": 0.69,
+    "passes_through": [
+      "south_china_sea",
+      "malacca_strait",
+      "indian_ocean",
+      "cape_of_good_hope",
+      "atlantic_ocean",
+      "north_sea"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "80bd367e-d514-47bf-ac1e-c32b9ee0ef64",
+    "origin": "Busan",
+    "destination": "Rotterdam",
+    "waypoints": [
+      "Hong_Kong",
+      "Singapore",
+      "Colombo",
+      "Suez_Canal",
+      "Rotterdam"
+    ],
+    "distance_km": 21200,
+    "base_time_hrs": 576,
+    "transport_mode": "sea",
+    "reliability_score": 0.74,
+    "cost_estimate": 0.75,
+    "passes_through": [
+      "east_china_sea",
+      "south_china_sea",
+      "malacca_strait",
+      "indian_ocean",
+      "bab_el_mandeb",
+      "suez_canal",
+      "mediterranean_sea"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "4e662044-b1f0-412a-b792-526741cea314",
+    "origin": "Karachi",
+    "destination": "Rotterdam",
+    "waypoints": [
+      "Colombo",
+      "Djibouti",
+      "Suez_Canal",
+      "Piraeus",
+      "Rotterdam"
+    ],
+    "distance_km": 10400,
+    "base_time_hrs": 360,
+    "transport_mode": "sea",
+    "reliability_score": 0.72,
+    "cost_estimate": 0.7,
+    "passes_through": [
+      "arabian_sea",
+      "indian_ocean",
+      "bab_el_mandeb",
+      "suez_canal",
+      "mediterranean_sea"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "b5b9ca0d-0dc2-49f3-a802-82019982e691",
+    "origin": "Djibouti",
+    "destination": "Rotterdam",
+    "waypoints": [
+      "Suez_Canal",
+      "Piraeus",
+      "Rotterdam"
+    ],
+    "distance_km": 6800,
+    "base_time_hrs": 240,
+    "transport_mode": "sea",
+    "reliability_score": 0.76,
+    "cost_estimate": 0.58,
+    "passes_through": [
+      "bab_el_mandeb",
+      "suez_canal",
+      "mediterranean_sea"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "1785750a-a64f-42ff-abb8-a12dc2bd3fac",
+    "origin": "Mumbai",
+    "destination": "Busan",
+    "waypoints": [
+      "Colombo",
+      "Port_Klang",
+      "Singapore",
+      "Hong_Kong",
+      "Busan"
+    ],
+    "distance_km": 7200,
+    "base_time_hrs": 264,
+    "transport_mode": "sea",
+    "reliability_score": 0.79,
+    "cost_estimate": 0.62,
+    "passes_through": [
+      "arabian_sea",
+      "indian_ocean",
+      "malacca_strait",
+      "south_china_sea",
+      "east_china_sea"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "31754bff-6716-4c98-9239-12531d50592b",
+    "origin": "Singapore",
+    "destination": "Dubai",
+    "waypoints": [
+      "Colombo",
+      "Hormuz_Strait",
+      "Dubai"
+    ],
+    "distance_km": 6200,
+    "base_time_hrs": 216,
+    "transport_mode": "sea",
+    "reliability_score": 0.76,
+    "cost_estimate": 0.6,
+    "passes_through": [
+      "malacca_strait",
+      "indian_ocean",
+      "arabian_sea",
+      "hormuz_strait"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "41e54ea4-fb2a-4e74-8f33-a897de17425c",
+    "origin": "Antwerp",
+    "destination": "Shanghai",
+    "waypoints": [
+      "Piraeus",
+      "Suez_Canal",
+      "Djibouti",
+      "Colombo",
+      "Singapore",
+      "Shanghai"
+    ],
+    "distance_km": 20800,
+    "base_time_hrs": 576,
+    "transport_mode": "sea",
+    "reliability_score": 0.73,
+    "cost_estimate": 0.74,
+    "passes_through": [
+      "north_sea",
+      "strait_of_gibraltar",
+      "mediterranean_sea",
+      "suez_canal",
+      "bab_el_mandeb",
+      "indian_ocean",
+      "malacca_strait",
+      "south_china_sea"
+    ],
+    "zone_path": null
+  },
+  {
+    "origin": "Los_Angeles",
+    "destination": "New_York",
+    "distance_km": 8000,
+    "base_time_hrs": 360,
+    "transport_mode": "sea",
+    "reliability_score": 0.85,
+    "cost_estimate": 0.65,
+    "passes_through": [
+      "panama_canal",
+      "pacific_ocean",
+      "atlantic_ocean"
+    ],
+    "waypoints": [
+      "Pacific_Ocean",
+      "Panama_Canal",
+      "Atlantic_Ocean"
+    ],
+    "id": "a1f9db7d-01ed-41a5-bd4b-736e609a51d1",
+    "zone_path": null
+  },
+  {
+    "origin": "Santos",
+    "destination": "Rotterdam",
+    "distance_km": 10500,
+    "base_time_hrs": 432,
+    "transport_mode": "sea",
+    "reliability_score": 0.9,
+    "cost_estimate": 0.7,
+    "passes_through": [
+      "atlantic_ocean"
+    ],
+    "waypoints": [
+      "Atlantic_Ocean"
+    ],
+    "id": "f12a0257-30e9-4dbe-a033-785b5556dda4",
+    "zone_path": null
+  },
+  {
+    "origin": "Sydney",
+    "destination": "Los_Angeles",
+    "distance_km": 12000,
+    "base_time_hrs": 480,
+    "transport_mode": "sea",
+    "reliability_score": 0.88,
+    "cost_estimate": 0.6,
+    "passes_through": [
+      "pacific_ocean"
+    ],
+    "waypoints": [
+      "Pacific_Ocean"
+    ],
+    "id": "0ef0dae1-da1b-4bcd-9586-9135cfc01cf7",
+    "zone_path": null
+  },
+  {
+    "origin": "Melbourne",
+    "destination": "Singapore",
+    "distance_km": 6000,
+    "base_time_hrs": 240,
+    "transport_mode": "sea",
+    "reliability_score": 0.92,
+    "cost_estimate": 0.5,
+    "passes_through": [
+      "indian_ocean"
+    ],
+    "waypoints": [
+      "Indian_Ocean"
+    ],
+    "id": "4196186c-eb68-4ddb-9c8e-6cec4ef1faee",
+    "zone_path": null
+  },
+  {
+    "id": "446b8e36-ce1e-41df-a788-a463af214252",
+    "origin": "Cape_Town",
+    "destination": "Piraeus",
+    "distance_km": 6557,
+    "base_time_hrs": 611,
+    "transport_mode": "sea",
+    "reliability_score": 0.74,
+    "cost_estimate": 0.51,
+    "passes_through": [
+      "bosphorus_strait"
+    ],
+    "waypoints": [
+      "Waypoint_86"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "29a23b4f-c787-4ce2-b072-315e04089f21",
+    "origin": "Piraeus",
+    "destination": "Yokohama",
+    "distance_km": 23688,
+    "base_time_hrs": 722,
+    "transport_mode": "sea",
+    "reliability_score": 0.85,
+    "cost_estimate": 0.79,
+    "passes_through": [
+      "bosphorus_strait",
+      "suez_canal"
+    ],
+    "waypoints": [
+      "Waypoint_88"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "40b84c87-6f1f-439b-a4cc-70d4fa26efb7",
+    "origin": "Los_Angeles",
+    "destination": "Shanghai",
+    "distance_km": 3331,
+    "base_time_hrs": 574,
+    "transport_mode": "sea",
+    "reliability_score": 0.9,
+    "cost_estimate": 0.61,
+    "passes_through": [
+      "strait_of_gibraltar",
+      "english_channel",
+      "suez_canal"
+    ],
+    "waypoints": [
+      "Waypoint_13"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "e752ff82-47da-4ac1-ac75-7e5a928d26de",
+    "origin": "Savannah",
+    "destination": "Houston",
+    "distance_km": 9669,
+    "base_time_hrs": 258,
+    "transport_mode": "sea",
+    "reliability_score": 0.84,
+    "cost_estimate": 0.61,
+    "passes_through": [
+      "english_channel"
+    ],
+    "waypoints": [
+      "Waypoint_77"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "71549f8a-46a4-4740-9474-07ce48b1cad1",
+    "origin": "Hong_Kong",
+    "destination": "Valparaiso",
+    "distance_km": 22008,
+    "base_time_hrs": 407,
+    "transport_mode": "sea",
+    "reliability_score": 0.7,
+    "cost_estimate": 0.67,
+    "passes_through": [
+      "suez_canal",
+      "bosphorus_strait"
+    ],
+    "waypoints": [
+      "Waypoint_40"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "e0aa6093-c2e1-4345-b057-f04ff5d3dcae",
+    "origin": "Shenzhen",
+    "destination": "Callao",
+    "distance_km": 9178,
+    "base_time_hrs": 172,
+    "transport_mode": "sea",
+    "reliability_score": 0.91,
+    "cost_estimate": 0.56,
+    "passes_through": [
+      "bosphorus_strait",
+      "panama_canal",
+      "suez_canal"
+    ],
+    "waypoints": [
+      "Waypoint_58"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "7fdeb5a8-9a44-40ce-8fdb-33831d3a6b2b",
+    "origin": "Karachi",
+    "destination": "Yokohama",
+    "distance_km": 17343,
+    "base_time_hrs": 538,
+    "transport_mode": "sea",
+    "reliability_score": 0.83,
+    "cost_estimate": 0.7,
+    "passes_through": [
+      "strait_of_gibraltar",
+      "panama_canal",
+      "bosphorus_strait"
+    ],
+    "waypoints": [
+      "Waypoint_54"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "e759a597-1849-40fb-8681-c90b06baaab5",
+    "origin": "Singapore",
+    "destination": "Antwerp",
+    "distance_km": 11183,
+    "base_time_hrs": 247,
+    "transport_mode": "sea",
+    "reliability_score": 0.94,
+    "cost_estimate": 0.35,
+    "passes_through": [
+      "english_channel",
+      "suez_canal",
+      "panama_canal"
+    ],
+    "waypoints": [
+      "Waypoint_82"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "6e9e6ced-3335-4364-994b-6241b0538a53",
+    "origin": "Valparaiso",
+    "destination": "Piraeus",
+    "distance_km": 16004,
+    "base_time_hrs": 436,
+    "transport_mode": "sea",
+    "reliability_score": 0.85,
+    "cost_estimate": 0.33,
+    "passes_through": [
+      "malacca_strait",
+      "suez_canal",
+      "strait_of_gibraltar"
+    ],
+    "waypoints": [
+      "Waypoint_99"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "325bb9d8-1463-4fe8-9503-05d6c6376ce3",
+    "origin": "Busan",
+    "destination": "Santos",
+    "distance_km": 23441,
+    "base_time_hrs": 465,
+    "transport_mode": "sea",
+    "reliability_score": 0.83,
+    "cost_estimate": 0.63,
+    "passes_through": [],
+    "waypoints": [
+      "Waypoint_35"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "9b967a2f-c338-495e-af14-36f7a20170ee",
+    "origin": "Melbourne",
+    "destination": "Santos",
+    "distance_km": 12882,
+    "base_time_hrs": 481,
+    "transport_mode": "sea",
+    "reliability_score": 0.72,
+    "cost_estimate": 0.46,
+    "passes_through": [
+      "english_channel",
+      "malacca_strait"
+    ],
+    "waypoints": [
+      "Waypoint_82"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "01b195b9-5973-4fe2-af5d-b87e8f994400",
+    "origin": "Melbourne",
+    "destination": "Busan",
+    "distance_km": 5777,
+    "base_time_hrs": 607,
+    "transport_mode": "sea",
+    "reliability_score": 0.71,
+    "cost_estimate": 0.32,
+    "passes_through": [
+      "english_channel",
+      "suez_canal"
+    ],
+    "waypoints": [
+      "Waypoint_98"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "cbd36282-c49d-4f1d-b565-fc28ad2f2b16",
+    "origin": "Los_Angeles",
+    "destination": "Genoa",
+    "distance_km": 7302,
+    "base_time_hrs": 114,
+    "transport_mode": "sea",
+    "reliability_score": 0.89,
+    "cost_estimate": 0.44,
+    "passes_through": [
+      "strait_of_gibraltar",
+      "panama_canal",
+      "bosphorus_strait"
+    ],
+    "waypoints": [
+      "Waypoint_10"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "55cb6a1b-c891-40b1-8d0a-7220459f09df",
+    "origin": "Hong_Kong",
+    "destination": "Busan",
+    "distance_km": 24386,
+    "base_time_hrs": 337,
+    "transport_mode": "sea",
+    "reliability_score": 0.76,
+    "cost_estimate": 0.48,
+    "passes_through": [
+      "english_channel"
+    ],
+    "waypoints": [
+      "Waypoint_60"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "5065fd2c-98e4-4470-b20f-9344cff60fbe",
+    "origin": "Alexandria",
+    "destination": "Kaohsiung",
+    "distance_km": 4391,
+    "base_time_hrs": 498,
+    "transport_mode": "sea",
+    "reliability_score": 0.88,
+    "cost_estimate": 0.38,
+    "passes_through": [
+      "malacca_strait",
+      "strait_of_gibraltar"
+    ],
+    "waypoints": [
+      "Waypoint_45"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "339ae8fe-1723-44d1-a38b-e907f630f976",
+    "origin": "New_York",
+    "destination": "Genoa",
+    "distance_km": 4134,
+    "base_time_hrs": 762,
+    "transport_mode": "sea",
+    "reliability_score": 0.83,
+    "cost_estimate": 0.41,
+    "passes_through": [
+      "strait_of_gibraltar",
+      "panama_canal",
+      "malacca_strait"
+    ],
+    "waypoints": [
+      "Waypoint_64"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "5d78c054-2afb-48d4-9f41-93e47afe647b",
+    "origin": "Buenos_Aires",
+    "destination": "New_York",
+    "distance_km": 4053,
+    "base_time_hrs": 554,
+    "transport_mode": "sea",
+    "reliability_score": 0.88,
+    "cost_estimate": 0.67,
+    "passes_through": [
+      "malacca_strait",
+      "strait_of_gibraltar",
+      "panama_canal"
+    ],
+    "waypoints": [
+      "Waypoint_24"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "6081904f-e9b1-4789-beb6-8816ff97bdec",
+    "origin": "Savannah",
+    "destination": "New_York",
+    "distance_km": 12635,
+    "base_time_hrs": 253,
+    "transport_mode": "sea",
+    "reliability_score": 0.95,
+    "cost_estimate": 0.65,
+    "passes_through": [
+      "malacca_strait",
+      "bosphorus_strait"
+    ],
+    "waypoints": [
+      "Waypoint_90"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "38e970eb-336e-4add-88ca-8d9673e7f95c",
+    "origin": "Rotterdam",
+    "destination": "Vancouver",
+    "distance_km": 11744,
+    "base_time_hrs": 262,
+    "transport_mode": "sea",
+    "reliability_score": 0.77,
+    "cost_estimate": 0.57,
+    "passes_through": [
+      "malacca_strait",
+      "suez_canal"
+    ],
+    "waypoints": [
+      "Waypoint_81"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "b7734695-37b6-4ab6-aa3e-2dcfe86024df",
+    "origin": "New_York",
+    "destination": "Qingdao",
+    "distance_km": 18171,
+    "base_time_hrs": 620,
+    "transport_mode": "sea",
+    "reliability_score": 0.71,
+    "cost_estimate": 0.35,
+    "passes_through": [
+      "bosphorus_strait"
+    ],
+    "waypoints": [
+      "Waypoint_26"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "e8b5bbed-1499-4a69-b7c5-f61321d2c907",
+    "origin": "Mumbai",
+    "destination": "Hong_Kong",
+    "distance_km": 17543,
+    "base_time_hrs": 600,
+    "transport_mode": "sea",
+    "reliability_score": 0.77,
+    "cost_estimate": 0.62,
+    "passes_through": [
+      "english_channel",
+      "suez_canal",
+      "malacca_strait"
+    ],
+    "waypoints": [
+      "Waypoint_16"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "14d353f2-d04c-459c-9c8b-238ae62b175c",
+    "origin": "Hamburg",
+    "destination": "Qingdao",
+    "distance_km": 9279,
+    "base_time_hrs": 445,
+    "transport_mode": "sea",
+    "reliability_score": 0.94,
+    "cost_estimate": 0.78,
+    "passes_through": [
+      "bosphorus_strait",
+      "suez_canal"
+    ],
+    "waypoints": [
+      "Waypoint_95"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "9147170d-a305-4395-9e12-7f622be1fa05",
+    "origin": "Miami",
+    "destination": "Mumbai",
+    "distance_km": 17588,
+    "base_time_hrs": 338,
+    "transport_mode": "sea",
+    "reliability_score": 0.8,
+    "cost_estimate": 0.51,
+    "passes_through": [],
+    "waypoints": [
+      "Waypoint_99"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "1a033bfe-abc5-4a4e-886f-193cd3635fea",
+    "origin": "Djibouti",
+    "destination": "Los_Angeles",
+    "distance_km": 3391,
+    "base_time_hrs": 788,
+    "transport_mode": "sea",
+    "reliability_score": 0.8,
+    "cost_estimate": 0.66,
+    "passes_through": [
+      "english_channel",
+      "suez_canal"
+    ],
+    "waypoints": [
+      "Waypoint_43"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "675912fb-03ab-4bf4-9adb-39ffd5454957",
+    "origin": "Cape_Town",
+    "destination": "Shanghai",
+    "distance_km": 12301,
+    "base_time_hrs": 212,
+    "transport_mode": "sea",
+    "reliability_score": 0.79,
+    "cost_estimate": 0.52,
+    "passes_through": [
+      "panama_canal",
+      "bosphorus_strait",
+      "strait_of_gibraltar"
+    ],
+    "waypoints": [
+      "Waypoint_15"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "bc12da73-ce5d-4dfd-88ac-7a47fe4accc3",
+    "origin": "Mumbai",
+    "destination": "Cape_Town",
+    "distance_km": 23039,
+    "base_time_hrs": 118,
+    "transport_mode": "sea",
+    "reliability_score": 0.9,
+    "cost_estimate": 0.64,
+    "passes_through": [],
+    "waypoints": [
+      "Waypoint_88"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "a59b632e-3695-42c6-914d-32f0109144d2",
+    "origin": "Tokyo",
+    "destination": "Colombo",
+    "distance_km": 18920,
+    "base_time_hrs": 747,
+    "transport_mode": "sea",
+    "reliability_score": 0.71,
+    "cost_estimate": 0.49,
+    "passes_through": [],
+    "waypoints": [
+      "Waypoint_100"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "57d2678d-697b-44a1-9ae7-4025a4f3b0e4",
+    "origin": "Genoa",
+    "destination": "Dubai",
+    "distance_km": 11880,
+    "base_time_hrs": 530,
+    "transport_mode": "sea",
+    "reliability_score": 0.75,
+    "cost_estimate": 0.34,
+    "passes_through": [
+      "strait_of_gibraltar",
+      "malacca_strait",
+      "panama_canal"
+    ],
+    "waypoints": [
+      "Waypoint_64"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "59d3d3d4-6dd3-449b-813d-fa99a693802f",
+    "origin": "Kaohsiung",
+    "destination": "Shanghai",
+    "distance_km": 18071,
+    "base_time_hrs": 271,
+    "transport_mode": "sea",
+    "reliability_score": 0.91,
+    "cost_estimate": 0.51,
+    "passes_through": [
+      "strait_of_gibraltar",
+      "malacca_strait",
+      "suez_canal"
+    ],
+    "waypoints": [
+      "Waypoint_26"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "1a49c4bb-803e-474e-adf0-147e9e5fdee8",
+    "origin": "Vancouver",
+    "destination": "Genoa",
+    "distance_km": 15375,
+    "base_time_hrs": 307,
+    "transport_mode": "sea",
+    "reliability_score": 0.9,
+    "cost_estimate": 0.75,
+    "passes_through": [
+      "panama_canal"
+    ],
+    "waypoints": [
+      "Waypoint_39"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "5a631ae2-a0c7-4409-bf71-d33020de7a44",
+    "origin": "Melbourne",
+    "destination": "Valparaiso",
+    "distance_km": 18912,
+    "base_time_hrs": 548,
+    "transport_mode": "sea",
+    "reliability_score": 0.87,
+    "cost_estimate": 0.77,
+    "passes_through": [
+      "english_channel",
+      "strait_of_gibraltar",
+      "malacca_strait"
+    ],
+    "waypoints": [
+      "Waypoint_56"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "ba831e7e-005d-4ff3-9c63-952edf992926",
+    "origin": "Mumbai",
+    "destination": "Qingdao",
+    "distance_km": 22841,
+    "base_time_hrs": 461,
+    "transport_mode": "sea",
+    "reliability_score": 0.89,
+    "cost_estimate": 0.79,
+    "passes_through": [],
+    "waypoints": [
+      "Waypoint_44"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "beff1c6f-3985-4dc7-9a58-668974667ce4",
+    "origin": "Antwerp",
+    "destination": "Valencia",
+    "distance_km": 19223,
+    "base_time_hrs": 381,
+    "transport_mode": "sea",
+    "reliability_score": 0.92,
+    "cost_estimate": 0.58,
+    "passes_through": [
+      "suez_canal",
+      "strait_of_gibraltar",
+      "panama_canal"
+    ],
+    "waypoints": [
+      "Waypoint_10"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "87d55726-903f-439a-83a8-0be411b2ce1b",
+    "origin": "Seattle",
+    "destination": "Rotterdam",
+    "distance_km": 6213,
+    "base_time_hrs": 538,
+    "transport_mode": "sea",
+    "reliability_score": 0.94,
+    "cost_estimate": 0.42,
+    "passes_through": [
+      "panama_canal"
+    ],
+    "waypoints": [
+      "Waypoint_81"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "059f8ed8-ff14-4ab6-9224-eb71d8d60736",
+    "origin": "Callao",
+    "destination": "Rotterdam",
+    "distance_km": 18312,
+    "base_time_hrs": 589,
+    "transport_mode": "sea",
+    "reliability_score": 0.86,
+    "cost_estimate": 0.48,
+    "passes_through": [
+      "suez_canal",
+      "bosphorus_strait"
+    ],
+    "waypoints": [
+      "Waypoint_60"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "2242f3cd-b2eb-4530-9eee-f4935334b74c",
+    "origin": "Cape_Town",
+    "destination": "New_York",
+    "distance_km": 23053,
+    "base_time_hrs": 517,
+    "transport_mode": "sea",
+    "reliability_score": 0.83,
+    "cost_estimate": 0.41,
+    "passes_through": [],
+    "waypoints": [
+      "Waypoint_71"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "07cb6b61-bcc6-4edf-908a-164b1d16c5ef",
+    "origin": "Algeciras",
+    "destination": "Los_Angeles",
+    "distance_km": 4728,
+    "base_time_hrs": 347,
+    "transport_mode": "sea",
+    "reliability_score": 0.76,
+    "cost_estimate": 0.53,
+    "passes_through": [
+      "suez_canal",
+      "bosphorus_strait",
+      "english_channel"
+    ],
+    "waypoints": [
+      "Waypoint_31"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "7bf49d6e-5852-4617-8c0a-ec026310cbe7",
+    "origin": "Vladivostok",
+    "destination": "Houston",
+    "distance_km": 7409,
+    "base_time_hrs": 697,
+    "transport_mode": "sea",
+    "reliability_score": 0.88,
+    "cost_estimate": 0.39,
+    "passes_through": [
+      "malacca_strait"
+    ],
+    "waypoints": [
+      "Waypoint_18"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "21df95bc-6e84-41a5-b151-8adb6091d891",
+    "origin": "Auckland",
+    "destination": "Shanghai",
+    "distance_km": 18939,
+    "base_time_hrs": 601,
+    "transport_mode": "sea",
+    "reliability_score": 0.86,
+    "cost_estimate": 0.76,
+    "passes_through": [],
+    "waypoints": [
+      "Waypoint_26"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "9b7829a0-81cc-43da-8c42-66df9c42c37a",
+    "origin": "Vladivostok",
+    "destination": "Kaohsiung",
+    "distance_km": 16325,
+    "base_time_hrs": 693,
+    "transport_mode": "sea",
+    "reliability_score": 0.72,
+    "cost_estimate": 0.69,
+    "passes_through": [],
+    "waypoints": [
+      "Waypoint_14"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "dc6c400c-4048-4f31-89b3-877f06509daf",
+    "origin": "Vladivostok",
+    "destination": "Melbourne",
+    "distance_km": 14453,
+    "base_time_hrs": 366,
+    "transport_mode": "sea",
+    "reliability_score": 0.88,
+    "cost_estimate": 0.41,
+    "passes_through": [],
+    "waypoints": [
+      "Waypoint_86"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "a2b97d9c-f072-40f7-9057-961bc2e022c3",
+    "origin": "Auckland",
+    "destination": "Genoa",
+    "distance_km": 23622,
+    "base_time_hrs": 589,
+    "transport_mode": "sea",
+    "reliability_score": 0.73,
+    "cost_estimate": 0.69,
+    "passes_through": [],
+    "waypoints": [
+      "Waypoint_94"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "12633881-9ddc-43a8-a468-f26801471cc1",
+    "origin": "Auckland",
+    "destination": "Mumbai",
+    "distance_km": 7768,
+    "base_time_hrs": 397,
+    "transport_mode": "sea",
+    "reliability_score": 0.7,
+    "cost_estimate": 0.32,
+    "passes_through": [
+      "suez_canal"
+    ],
+    "waypoints": [
+      "Waypoint_97"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "4b4dc17b-8888-4078-bfcd-a7712dcb9dec",
+    "origin": "Auckland",
+    "destination": "Yokohama",
+    "distance_km": 7598,
+    "base_time_hrs": 598,
+    "transport_mode": "sea",
+    "reliability_score": 0.95,
+    "cost_estimate": 0.6,
+    "passes_through": [
+      "strait_of_gibraltar"
+    ],
+    "waypoints": [
+      "Waypoint_83"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "b3d5c206-7ed3-4120-884f-29fc78436f02",
+    "origin": "Tokyo",
+    "destination": "Auckland",
+    "distance_km": 19996,
+    "base_time_hrs": 734,
+    "transport_mode": "sea",
+    "reliability_score": 0.85,
+    "cost_estimate": 0.66,
+    "passes_through": [
+      "suez_canal",
+      "english_channel"
+    ],
+    "waypoints": [
+      "Waypoint_87"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "49ceac26-0235-4b15-bbd1-05d7732878af",
+    "origin": "Rotterdam",
+    "destination": "Auckland",
+    "distance_km": 4776,
+    "base_time_hrs": 479,
+    "transport_mode": "sea",
+    "reliability_score": 0.77,
+    "cost_estimate": 0.5,
+    "passes_through": [
+      "suez_canal"
+    ],
+    "waypoints": [
+      "Waypoint_63"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "a9016886-82ca-46a6-823e-087c8480c5e0",
+    "origin": "Auckland",
+    "destination": "Singapore",
+    "distance_km": 12900,
+    "base_time_hrs": 666,
+    "transport_mode": "sea",
+    "reliability_score": 0.73,
+    "cost_estimate": 0.66,
+    "passes_through": [
+      "bosphorus_strait",
+      "strait_of_gibraltar"
+    ],
+    "waypoints": [
+      "Waypoint_38"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "065eb7d2-6b1c-4d94-9f77-6ef566cdd548",
+    "origin": "St_Petersburg",
+    "destination": "Auckland",
+    "distance_km": 14201,
+    "base_time_hrs": 615,
+    "transport_mode": "sea",
+    "reliability_score": 0.84,
+    "cost_estimate": 0.37,
+    "passes_through": [
+      "panama_canal"
+    ],
+    "waypoints": [
+      "Waypoint_5"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "0e862671-01d9-420c-9937-69e4b84b069e",
+    "origin": "Dubai",
+    "destination": "Vladivostok",
+    "distance_km": 4176,
+    "base_time_hrs": 272,
+    "transport_mode": "sea",
+    "reliability_score": 0.73,
+    "cost_estimate": 0.66,
+    "passes_through": [
+      "panama_canal",
+      "malacca_strait"
+    ],
+    "waypoints": [
+      "Waypoint_90"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "1a477f0d-f00d-4535-b109-a43ad995f6f4",
+    "origin": "Auckland",
+    "destination": "Valparaiso",
+    "distance_km": 4123,
+    "base_time_hrs": 692,
+    "transport_mode": "sea",
+    "reliability_score": 0.77,
+    "cost_estimate": 0.52,
+    "passes_through": [],
+    "waypoints": [
+      "Waypoint_19"
+    ],
+    "zone_path": null
+  },
+  {
+    "id": "ef59ff15-6fec-4f65-ac74-a02a89c6936f",
+    "origin": "Auckland",
+    "destination": "Karachi",
+    "distance_km": 7971,
+    "base_time_hrs": 724,
+    "transport_mode": "sea",
+    "reliability_score": 0.92,
+    "cost_estimate": 0.4,
+    "passes_through": [],
+    "waypoints": [
+      "Waypoint_81"
+    ],
+    "zone_path": null
+  }
+]
