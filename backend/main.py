@@ -25,9 +25,15 @@ from app.api.esg import router as esg_router
 async def lifespan(app: FastAPI):
     # Runs at startup — models already loaded by loader.py imports
     print("[main] Supply Chain AI starting up")
-    start_scheduler()
-    init_demo_shipments()
-    init_demo_ledger()
+    try:
+        start_scheduler()
+    except Exception as e:
+        print(f"[main] Scheduler skipped (serverless env): {e}")
+    try:
+        init_demo_shipments()
+        init_demo_ledger()
+    except Exception as e:
+        print(f"[main] Demo data init skipped: {e}")
     yield
     print("[main] Shutting down")
 
