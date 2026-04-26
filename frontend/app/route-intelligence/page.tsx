@@ -5,7 +5,8 @@ import TopBar from '@/components/layout/TopBar'
 import RouteAssessor from '@/components/intelligence/RouteAssessor'
 import RouteCompare from '@/components/intelligence/RouteCompare'
 
-export default function IntelligencePage() {
+// Isolated into its own component so useSearchParams() is inside a Suspense boundary
+function IntelligenceContent() {
   const searchParams = useSearchParams()
   const [tab, setTab] = useState<'assess' | 'compare'>(
     (searchParams.get('tab') as 'assess' | 'compare') ?? 'assess'
@@ -19,11 +20,7 @@ export default function IntelligencePage() {
   }, [searchParams])
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <TopBar
-        title="Route intelligence"
-        subtitle="Assess disruption risk and compare routing options before you ship"
-      />
+    <>
       <div className="flex gap-1 px-5 py-3 bg-white border-b border-slate-200 flex-shrink-0">
         {[
           { key: 'assess',  label: 'Assess a route' },
@@ -45,6 +42,20 @@ export default function IntelligencePage() {
           {tab === 'compare' && <RouteCompare />}
         </Suspense>
       </div>
+    </>
+  )
+}
+
+export default function IntelligencePage() {
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+      <TopBar
+        title="Route intelligence"
+        subtitle="Assess disruption risk and compare routing options before you ship"
+      />
+      <Suspense fallback={<div className="p-5 text-xs text-slate-500">Loading...</div>}>
+        <IntelligenceContent />
+      </Suspense>
     </div>
   )
 }
