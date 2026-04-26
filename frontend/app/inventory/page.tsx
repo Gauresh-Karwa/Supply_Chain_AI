@@ -536,8 +536,8 @@ export default function InventoryPage() {
                       <XAxis type="number" tick={{ fontSize: 9, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
                       <YAxis dataKey="name" type="category" tick={{ fontSize: 9, fill: '#475569' }} tickLine={false} axisLine={false} width={80} />
                       <Tooltip
-                        formatter={(val: number, name: string) => [
-                          `${val} days`,
+                        formatter={(val: unknown, name: unknown) => [
+                          `${val as number} days`,
                           name === 'stock' ? 'Stock coverage' : 'Shipment arrival'
                         ]}
                         contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e2e8f0' }}
@@ -579,7 +579,7 @@ export default function InventoryPage() {
                         <XAxis type="number" tick={{ fontSize: 9, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
                         <YAxis dataKey="name" type="category" tick={{ fontSize: 9, fill: '#475569' }} tickLine={false} axisLine={false} width={80} />
                         <Tooltip
-                          formatter={(val: number) => [`$${val}k`, 'Exposure']}
+                          formatter={(val: unknown) => [`$${val as number}k`, 'Exposure']}
                           contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e2e8f0' }}
                         />
                         <Bar dataKey="exposure" fill="#dc2626" radius={[0, 4, 4, 0]} barSize={12} opacity={0.85} />
