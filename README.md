@@ -102,6 +102,7 @@ APScheduler refreshes risk scores for all active shipments every 15 minutes. Whe
 ---
 
 ## Architecture
+```
 Frontend (Next.js 15 / Vercel)
 │
 ├── REST API calls
@@ -139,7 +140,7 @@ Data Layer (Supabase PostgreSQL)
 shipments │ routes (36) │ constraints (16 regions)
 inventory_items │ esg_reports │ scenario_simulations
 cost_analyses
-
+```
 ---
 
 ## Tech Stack
