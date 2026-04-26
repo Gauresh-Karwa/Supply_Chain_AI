@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import { Shipment } from '@/types'
 import { fetchShipments } from '@/lib/api'
 
-const API = 'http://localhost:8000'
+const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
 interface PortCongestion {
   port_name: string

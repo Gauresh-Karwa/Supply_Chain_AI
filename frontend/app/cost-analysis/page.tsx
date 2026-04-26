@@ -119,7 +119,7 @@ export default function CostAnalysisPage() {
   useEffect(() => {
     Promise.all([
       fetchShipments(),
-      fetch('http://localhost:8000/cost-analysis').then(r => r.ok ? r.json() : { analyses: [] }).catch(() => ({ analyses: [] }))
+      fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'}/cost-analysis`).then(r => r.ok ? r.json() : { analyses: [] }).catch(() => ({ analyses: [] }))
     ])
     .then(([d, histR]) => {
       const ships = d.shipments || []
@@ -188,7 +188,7 @@ export default function CostAnalysisPage() {
     if (!selectedShipment || saving) return
     setSaving(true)
     try {
-      const res = await fetch('http://localhost:8000/cost-analysis', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'}/cost-analysis`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -217,7 +217,7 @@ export default function CostAnalysisPage() {
     setDeletingId(id)
     try {
       if (id) {
-        await fetch(`http://localhost:8000/cost-analysis/${id}`, { method: 'DELETE' })
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'}/cost-analysis/${id}`, { method: 'DELETE' })
         setHistory(p => p.filter(h => h.id !== id))
       } else if (localIdx !== undefined) {
         setHistory(p => p.filter((_, j) => j !== localIdx))
