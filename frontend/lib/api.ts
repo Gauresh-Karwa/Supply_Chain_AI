@@ -22,33 +22,33 @@ export function formatExposure(
 }
 
 export async function fetchShipments() {
-  const res = await fetch(`${BASE}/api/shipments`)
+  const res = await fetch(`${BASE}/shipments`)
   if (!res.ok) throw new Error('Failed to fetch shipments')
   return res.json()
 }
 
 export async function fetchRoutes() {
-  const res = await fetch(`${BASE}/api/routes`)
+  const res = await fetch(`${BASE}/routes`)
   if (!res.ok) throw new Error('Failed to fetch routes')
   return res.json()
 }
 
 export async function fetchRoutesForPair(origin: string, destination: string) {
   const res = await fetch(
-    `${BASE}/api/routes/${encodeURIComponent(origin)}/${encodeURIComponent(destination)}`
+    `${BASE}/routes/${encodeURIComponent(origin)}/${encodeURIComponent(destination)}`
   )
   if (!res.ok) throw new Error('No routes found')
   return res.json()
 }
 
 export async function fetchConstraints() {
-  const res = await fetch(`${BASE}/api/constraints`)
+  const res = await fetch(`${BASE}/constraints`)
   if (!res.ok) throw new Error('Failed to fetch constraints')
   return res.json()
 }
 
 export async function updateConstraint(regionId: string, status: string) {
-  const res = await fetch(`${BASE}/api/constraints/${regionId}`, {
+  const res = await fetch(`${BASE}/constraints/${regionId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status }),
@@ -58,7 +58,7 @@ export async function updateConstraint(regionId: string, status: string) {
 }
 
 export async function fetchESGDashboard() {
-  const res = await fetch(`${BASE}/api/esg`)
+  const res = await fetch(`${BASE}/esg`)
   if (!res.ok) throw new Error('Failed to fetch ESG data')
   return res.json()
 }
@@ -68,7 +68,7 @@ export async function predictRoute(
   destination: string,
   departureDate: string
 ) {
-  const res = await fetch(`${BASE}/api/predict`, {
+  const res = await fetch(`${BASE}/predict`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -88,7 +88,7 @@ export async function whatIfSimulation(
   currentRouteId: string,
   alternateRouteId: string
 ) {
-  const res = await fetch(`${BASE}/api/predict/whatif`, {
+  const res = await fetch(`${BASE}/predict/whatif`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -109,7 +109,7 @@ export async function simulateScenario(
   scenarioName: string,
   save = false
 ) {
-  const res = await fetch(`${BASE}/api/scenarios/simulate`, {
+  const res = await fetch(`${BASE}/scenarios/simulate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -127,11 +127,11 @@ export async function applyConstraintOverrides(
   overrides: Record<string, 'open' | 'restricted' | 'blocked'>
 ) {
   const updates = Object.entries(overrides).map(([regionId, status]) =>
-    fetch(`${BASE}/api/constraints/${regionId}`, {
+    fetch(`${BASE}/constraints/${regionId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
     })
   )
   await Promise.all(updates)
-}
+}
