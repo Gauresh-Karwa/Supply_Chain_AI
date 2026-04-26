@@ -11,5 +11,5 @@ shap==0.45.1
 requests==2.31.0
 apscheduler==3.10.4
 google-genai==1.10.0
-pydantic==2.7.1
+pydantic==2.11.7
 httpx==0.28.1
